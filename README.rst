@@ -43,7 +43,7 @@ USB support requires `PyUSB`_.
 Bluetooth Example
 -----------------
 
-Bluetooth support requires `PyBluez`_.
+Bluetooth support requires `PyBluez`_ (*not yet implemented*).
 
 .. sourcecode:: python
 
@@ -68,7 +68,7 @@ and call `barcode()` method. Or simply call convenient barcode methods
     from escpos.barcode import BarcodeEAN13
     from escpos.impl.epson import GenericESCPOS
 
-    conn = SerialSettings.from('/dev/ttyS5:9600:8:1:N').get_connection()
+    conn = SerialSettings.as_from('/dev/ttyS5:9600:8:1:N').get_connection()
     printer = GenericESCPOS(conn)
     printer.init()
 
