@@ -1,0 +1,27 @@
+{
+    "folders":
+    [
+        {
+            "path": ".",
+            "name": "\"PyESCPOS\" Project Files",
+            "folder_exclude_patterns": 
+            [
+                "escpos", "dist", "build", "PyESCPOS.egg-info"
+            ],
+            "file_exclude_patterns": ["*.sublime-*"]
+        },
+        {
+            "path": "escpos",
+            "name": "Sources",
+            "folder_exclude_patterns": ["__pycache__"],
+            "file_exclude_patterns": ["*.pyc",]
+        }
+    ],
+    "settings":
+    {
+        "tab_size": 4,
+        "translate_tabs_to_spaces": true,
+        "rulers": [80, 100],
+        "word_wrap": false
+    }
+}
