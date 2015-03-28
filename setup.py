@@ -63,7 +63,7 @@ setup(
             'Environment :: Other Environment',
             'Intended Audience :: Developers',
             'Intended Audience :: Information Technology',
-            'License :: OSI Approved :: GNU Lesser General Public License v3',
+            'License :: OSI Approved :: Apache Software License',
             'Natural Language :: English',
             'Operating System :: OS Independent',
             'Programming Language :: Python',
