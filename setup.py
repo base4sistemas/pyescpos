@@ -44,7 +44,7 @@ setup(
     name='PyESCPOS',
     version=escpos.__version__,
     url='http://github.com/base4sistemas/pyescpos/',
-    license='LGPL',
+    license='Apache Software License',
     author='Daniel Gonçalves',
     tests_require=['pytest'],
     install_requires=[],
