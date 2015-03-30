@@ -132,6 +132,6 @@ class DarumaGeneric(GenericESCPOS):
                 data
 
         self.device.write(command)
-        time.sleep(1) # sleeps half-second for qrcode to be printed
+        time.sleep(1) # sleeps one second for qrcode to be printed
         response = self.device.read()
         return response

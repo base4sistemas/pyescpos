@@ -43,7 +43,7 @@ class PyTest(TestCommand):
 setup(
     name='PyESCPOS',
     version=escpos.__version__,
-    url='http://github.com/danielgoncalves/pyescpos/',
+    url='http://github.com/base4sistemas/pyescpos/',
     license='LGPL',
     author='Daniel Gonçalves',
     tests_require=['pytest'],
