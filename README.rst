@@ -2,7 +2,25 @@
 PyESCPOS
 ========
 
-A Python support for Epson|copy| ESC/POS|reg| compatible printers.
+.. image:: https://pypip.in/status/pyescpos/badge.svg
+    :target: https://pypi.python.org/pypi/pyescpos/
+    :alt: Development status
+
+.. image:: https://pypip.in/py_versions/pyescpos/badge.svg
+    :target: https://pypi.python.org/pypi/pyescpos/
+    :alt: Supported Python versions
+
+.. image:: https://pypip.in/license/pyescpos/badge.svg
+    :target: https://pypi.python.org/pypi/pyescpos/
+    :alt: License
+
+.. image:: https://pypip.in/version/pyescpos/badge.svg
+    :target: https://pypi.python.org/pypi/pyescpos/
+    :alt: Latest version
+
+-------
+
+A Python support for Epson |copy| ESC/POS |reg| compatible printers.
 
 Read more at `Epson ESCPOS FAQ`_ (PDF document).
 
@@ -43,7 +61,7 @@ USB support requires `PyUSB`_.
 Bluetooth Example
 -----------------
 
-Bluetooth support requires `PyBluez`_ (*not yet implemented*).
+Bluetooth support requires `PyBlueZ`_ (*not yet implemented*).
 
 .. sourcecode:: python
 
@@ -107,11 +125,14 @@ It is important that you read this **disclaimer**.
     Codes copied from reStructuredText Standard Definition Files at
     http://docutils.sourceforge.net/docutils/parsers/rst/include/isonum.txt
 
-.. |copy| unicode:: U+000A9 .. COPYRIGHT SIGN
-.. |reg|  unicode:: U+000AE .. REGISTERED SIGN
+.. |copy| unicode:: U+00A9 .. COPYRIGHT SIGN
+    :ltrim:
+
+.. |reg|  unicode:: U+00AE .. REGISTERED SIGN
+    :ltrim:
 
 .. _`Epson ESCPOS FAQ`: http://content.epson.de/fileadmin/content/files/RSD/downloads/escpos.pdf
 .. _`python-escpos`: https://github.com/manpaz/python-escpos
 .. _`PySerial`: http://pyserial.sourceforge.net/
 .. _`PyUSB`: http://walac.github.io/pyusb/
-.. _`PyBluez`: https://github.com/manuelnaranjo/PyBlueZ
+.. _`PyBlueZ`: https://github.com/manuelnaranjo/PyBlueZ
