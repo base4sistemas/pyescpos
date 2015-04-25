@@ -499,6 +499,7 @@ class RTSCTSConnection(AbstractSerialConnection):
                 if self.comport.getCTS():
                     break
             self.comport.write(chunk)
+        self.comport.flush()
 
 
 class _SerialDumper(pyserial.Serial):
