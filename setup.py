@@ -54,7 +54,7 @@ setup(
     author_email='daniel@base4.com.br',
     description='Support for Epson ESC/POS printer command system.',
     long_description=long_description,
-    packages=['escpos'],
+    packages=['escpos', 'escpos.impl'],
     include_package_data=True,
     platforms='any',
     test_suite='escpos.tests',
