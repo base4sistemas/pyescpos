@@ -20,12 +20,29 @@ PyESCPOS
 
 -------
 
-A Python support for Epson |copy| ESC/POS |reg| compatible printers.
+A Python support for Epson |copy| ESC/POS |reg| compatible printers. 
 
 Read more at `Epson ESCPOS FAQ`_ (PDF document).
 
 This library is inspired on Manuel F. Martinez work for `python-escpos`_
 implementation.
+
+
+Tested Hardware
+===============
+
+Current implementation was tested against following hardwares:
+
++-------------------------+-------------------+-------------------+
+| Manufacturer            | Models            | Firmware Versions |
++=========================+===================+===================+
+| `Urmet Daruma`_         | DR700 L/H/M       | 02.51.00,         |
+|                         | DR700 L-e/H-e     | 01.20.00,         |
+|                         |                   | 01.21.00          |
++-------------------------+-------------------+-------------------+
+| `Bematech S/A`_         | MP-4200 TH        | 1.3, 1.6          |
+|                         |                   |                   |
++-------------------------+-------------------+-------------------+
 
 
 Example Usage
@@ -136,3 +153,6 @@ It is important that you read this **disclaimer**.
 .. _`PySerial`: http://pyserial.sourceforge.net/
 .. _`PyUSB`: http://walac.github.io/pyusb/
 .. _`PyBlueZ`: https://github.com/manuelnaranjo/PyBlueZ
+.. _`Urmet Daruma`: http://daruma.com.br/
+.. _`Bematech S/A`: http://www.bematechus.com/
+

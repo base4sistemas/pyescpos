@@ -21,6 +21,7 @@ from __future__ import absolute_import
 
 import time
 
+from .. import feature
 from ..barcode import BarcodeEAN13
 from ..barcode import BarcodeEAN8
 from ..barcode import BarcodeCode128
@@ -38,9 +39,16 @@ class GenericESCPOS(object):
     ``catch`` it, ``write`` to and ``read`` from.
     """
 
+    hardware_features = {}
+    """
+    A mapping of hardware features.
+    """
 
-    def __init__(self, device):
+
+    def __init__(self, device, features={}):
         super(GenericESCPOS, self).__init__()
+        self.hardware_features = feature._SET
+        self.hardware_features.update(features)
         self.device = device
         self.device.catch()
 
@@ -101,8 +109,7 @@ class GenericESCPOS(object):
 
 
     def set_emphasized(self, flag):
-        raise NotImplementedError()
-
+        self.device.write('\x1B\x45' + '\x01' if flag else '\x00')
 
 
     def barcode(self, instance):
@@ -145,3 +152,28 @@ class GenericESCPOS(object):
         Print QRCode symbol for the given data.
         """
         raise NotImplementedError()
+
+
+    def cut(self, partial=True):
+        """
+        Trigger cutter to perform partial (default) or full paper cut.
+        """
+        if self.hardware_features.get(feature.CUTTER, False):
+            # TODO: implement hardware alternative for unavailable features
+            # For example:
+            #
+            #       self.hardware_alternatives.get('cutter-full-cut')(self)
+            # 
+            # So, implementations or end-user-applications can replace
+            # certain hardware functionalites, based on available features.
+            #
+            # The above mapping can replace full cuts with line feeds for
+            # printer hardware that do not have an automatic paper cutter:
+            #
+            #       self.hardware_alternatives.update({
+            #               # skip 7 lines if we do not have a paper cutter
+            #               'cutter-full-cut': lambda impl: impl.lf(7)
+            #           })
+            #
+            param = '\x01' if partial else '\x00'
+            self.device.write('\x1D\x56' + param)

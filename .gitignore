@@ -3,6 +3,7 @@ __pycache__/
 /build/
 /dist/
 /PyESCPOS.egg-info/
+/*.egg/
 
 *.pyc
 *.pyo
