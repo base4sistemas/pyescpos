@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/__init__.py
+# escpos/feature.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #
@@ -17,5 +17,16 @@
 # limitations under the License.
 #
 
-__version__ = '0.0.3'
+"""
+    A bunch of identifiers representing hardware features.
+"""
 
+CUTTER = 'cutter'
+
+
+_SET = {
+        CUTTER: False,
+    }
+"""
+Default features set.
+"""

@@ -22,6 +22,7 @@ from __future__ import absolute_import
 import time
 
 from .. import asc
+from .. import feature
 from .epson import GenericESCPOS
 from ..helpers import is_value_in
 
@@ -68,8 +69,12 @@ class DarumaGeneric(GenericESCPOS):
     other printer models (web site in brazillian portuguese only).
     """
 
-    def __init__(self, device):
+    def __init__(self, device, features={}):
         super(DarumaGeneric, self).__init__(device)
+        self.hardware_features.update({
+                feature.CUTTER: False,
+            })
+        self.hardware_features.update(features)
 
 
     def justify_center(self):
