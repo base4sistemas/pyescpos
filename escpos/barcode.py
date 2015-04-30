@@ -17,108 +17,173 @@
 # limitations under the License.
 #
 
-import re
+"""
+    Barcode normalization parameters/values.
+
+    Implementations of ESC/POS systems should rely on these end-user values
+    and then make their best efforts to translate to the implementation
+    specific values.
+"""
+
+from .helpers import is_value_in
 
 
-DEFAULT_BARCODE_WIDTH = 2
+BARCODE_NORMAL_WIDTH = 1
+BARCODE_DOUBLE_WIDTH = 2
+BARCODE_QUADRUPLE_WIDTH = 3
 
-DEFAULT_BARCODE_HEIGHT = 50
-
-
-class Barcode(object):
-
-    def __init__(self, data,
-            bar_width=DEFAULT_BARCODE_WIDTH,
-            bar_height=DEFAULT_BARCODE_HEIGHT,
-            labeled=True):
-
-        super(Barcode, self).__init__()
-        self.data = data
-        self.symbology = None
-        self.bar_width = bar_width
-        self.bar_height = bar_height
-        self.labeled = labeled
+BARCODE_WIDTHS = (
+        (BARCODE_NORMAL_WIDTH, u'Normal width'),
+        (BARCODE_DOUBLE_WIDTH, u'Double width'),
+        (BARCODE_QUADRUPLE_WIDTH, u'Quadruple width'),
+    )
+"""
+Possible barcode width values.
+"""
 
 
-    def render(self):
-        if self.symbology is None:
-            raise ValueError('Unknown barcode symbology')
-        labeled = '\x01' if self.labeled else '\x00'
-        code = '\x1B\x62{symbology}{barw}{barh}{labeled}{data}\x00'.format(
-                symbology=chr(self.symbology),
-                barw=chr(self.bar_width),
-                barh=chr(self.bar_height),
-                labeled=labeled,
-                data=self._get_data_for_rendering())
-        return code
+BARCODE_HRI_NONE = 0
+BARCODE_HRI_TOP = 1
+BARCODE_HRI_BOTTOM = 2
+BARCODE_HRI_BOTH = 3
+
+BARCODE_HRI_POSITIONING = (
+        (BARCODE_HRI_NONE, u'No HRI'),
+        (BARCODE_HRI_TOP, u'HRI on top of barcode'),
+        (BARCODE_HRI_BOTTOM, u'HRI on bottom of barcode'),
+        (BARCODE_HRI_BOTH, u'HRI on both top and bottom of bar code'),
+    )
+"""
+Possible barcode HRI (*human readable information*) positionings.
+"""
 
 
-    def _get_data_for_rendering(self):
-        return self.data
+QRCODE_ERROR_CORRECTION_L = 'L'
+QRCODE_ERROR_CORRECTION_M = 'M'
+QRCODE_ERROR_CORRECTION_Q = 'Q'
+QRCODE_ERROR_CORRECTION_H = 'H'
+
+QRCODE_ERROR_CORRECTION_LEVELS = (
+        (QRCODE_ERROR_CORRECTION_L, 'Level L (~7%)'),
+        (QRCODE_ERROR_CORRECTION_M, 'Level M (~15%)'),
+        (QRCODE_ERROR_CORRECTION_Q, 'Level Q (~25%)'),
+        (QRCODE_ERROR_CORRECTION_H, 'Level H (~30%)'),
+    )
+"""
+QRCode possible error correction levels for ``qrcode_ecc_level`` keyword
+argument. See http://www.qrcode.com/en/about/error_correction.html.
+"""
 
 
+QRCODE_MODULE_SIZE_4 = 4
+QRCODE_MODULE_SIZE_5 = 5
+QRCODE_MODULE_SIZE_6 = 6
+QRCODE_MODULE_SIZE_7 = 7
+QRCODE_MODULE_SIZE_8 = 8
 
-class BarcodeEAN13(Barcode):
-
-    EAN13_PATTERN = re.compile(r'\d{13}')
-
-    def __init__(self, data, **kwargs):
-        super(BarcodeEAN13, self).__init__(data, **kwargs)
-        self.symbology = 1
-
-        if not self.EAN13_PATTERN.match(data):
-            raise ValueError('EAN-13 symbology requires 13 digits of data; '
-                    'got %d digits ("%s")' % (len(data), data,))
-        
-
-    def _get_data_for_rendering(self):
-        # truncate to 12 digits, since check-digit will be
-        # calculated by device firmware...
-        return self.data[:12]
-
-
-class BarcodeEAN8(Barcode):
-
-    EAN8_PATTERN = re.compile(r'\d{8}')
-
-    def __init__(self, data, **kwargs):
-        super(BarcodeEAN8, self).__init__(data, **kwargs)
-        self.symbology = 2
-
-        if not self.EAN8_PATTERN.match(data):
-            raise ValueError('EAN-8 symbology requires 8 digits of data; '
-                    'got %d digits ("%s")' % (len(data), data,))
+QRCODE_MODULE_SIZES = (
+        (QRCODE_MODULE_SIZE_4, '4-dot'),
+        (QRCODE_MODULE_SIZE_5, '5-dot'),
+        (QRCODE_MODULE_SIZE_6, '6-dot'),
+        (QRCODE_MODULE_SIZE_7, '7-dot'),
+        (QRCODE_MODULE_SIZE_8, '8-dot'),
+    )
+"""
+QRCode possible module sizes for ``qrcode_module_size`` keyword argument.
+See http://www.qrcode.com/en/howto/cell.html.
+"""
 
 
-    def _get_data_for_rendering(self):
-        # truncate to 7 digits, since check-digit will be
-        # calculated by device firmware...
-        return self.data[:7]
+_BARCODE_ARGS = {
+        'barcode_height':
+                lambda v: v in xrange(1, 256),
+
+        'barcode_width':
+                lambda v: is_value_in(BARCODE_WIDTHS, v),
+
+        'barcode_hri':
+                lambda v: is_value_in(BARCODE_HRI_POSITIONING, v),
+    }
 
 
-class BarcodeCode128(Barcode):
+_QRCODE_ARGS = {
+        'qrcode_module_size':
+                lambda v: is_value_in(QRCODE_MODULE_SIZES, v),
 
-    CODE128_PATTERN = re.compile(r'^[\x20-\x7F]+$')
-
-    def __init__(self, data, **kwargs):
-        super(BarcodeCode128, self).__init__(data, **kwargs)
-        self.symbology = 5
-        
-        if not self.CODE128_PATTERN.match(data):
-            raise ValueError('Invalid Code128 symbology. Code128 can encode '
-                    'any ASCII character ranging from 32 (20h) to 127 (7Fh); '
-                    'got "%s"' % data)
+        'qrcode_ecc_level':
+                lambda v: is_value_in(QRCODE_ERROR_CORRECTION_LEVELS, v),
+    }
 
 
+def validate_barcode_args(**kwargs):
+    """
+    Validate QRCode keyword arguments.
 
-class QRCode(object):
+    .. sourcecode::
 
-    def render(self):
-        pass
+        >>> validate_barcode_args(**{})
+        >>> validate_barcode_args(**{'barcode_height': 50})
+        >>> validate_barcode_args(**{'barcode_width': BARCODE_NORMAL_WIDTH})
+        >>> validate_barcode_args(**{'barcode_hri': BARCODE_HRI_TOP})
+        >>> validate_barcode_args(**{
+        ...         'barcode_height': 100,
+        ...         'barcode_width': BARCODE_DOUBLE_WIDTH,
+        ...         'barcode_hri': BARCODE_HRI_BOTH})
+
+        >>> validate_barcode_args(**{'no_bars': 123})
+        Traceback (most recent call last):
+         ...
+        ValueError: Unexpected keyword argument: 'no_bars'
+
+        >>> validate_barcode_args(**{'barcode_height': 0})
+        Traceback (most recent call last):
+         ...
+        ValueError: Invalid argument value: barcode_height=0
+
+    """
+    _validate_kwargs(_BARCODE_ARGS, **kwargs)
 
 
-class ImageBasedQRCode(object):
+def validate_qrcode_args(**kwargs):
+    """
+    Validate QRCode keyword arguments.
 
-    def render(self):
-        pass
-        
+    .. sourcecode::
+
+        >>> validate_qrcode_args(**{})
+        >>> validate_qrcode_args(**{'qrcode_ecc_level': 'L'})
+        >>> validate_qrcode_args(**{'qrcode_module_size': 4})
+        >>> validate_qrcode_args(**{
+        ...         'qrcode_ecc_level': 'L',
+        ...         'qrcode_module_size': 4})
+
+        >>> validate_qrcode_args(**{'oops': 123})
+        Traceback (most recent call last):
+         ...
+        ValueError: Unexpected keyword argument: 'oops'
+
+        >>> validate_qrcode_args(**{'qrcode_ecc_level': 'IMPOSSIBLE'})
+        Traceback (most recent call last):
+         ...
+        ValueError: Invalid argument value: qrcode_ecc_level=IMPOSSIBLE
+
+    """
+    _validate_kwargs(_QRCODE_ARGS, **kwargs)
+
+
+def _validate_kwargs(possible_kwargs, **kwargs):
+    for argument, value in kwargs.items():
+        _validate_kwarg_name(possible_kwargs, argument)
+        _validate_kwarg_value(possible_kwargs, argument, value)
+
+
+def _validate_kwarg_name(possible_kwargs, argument):
+    if argument not in possible_kwargs.keys():
+        raise ValueError("Unexpected keyword argument: '{}'".format(argument))
+
+
+def _validate_kwarg_value(possible_kwargs, argument, value):
+    if not possible_kwargs[argument](value):
+        raise ValueError("Invalid argument value: {:s}={!s}".format(
+                argument, value))
+

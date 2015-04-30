@@ -17,14 +17,11 @@
 # limitations under the License.
 #
 
-from __future__ import absolute_import
-
+import re
 import time
 
+from .. import barcode
 from .. import feature
-from ..barcode import BarcodeEAN13
-from ..barcode import BarcodeEAN8
-from ..barcode import BarcodeCode128
 
 
 class GenericESCPOS(object):
@@ -112,45 +109,61 @@ class GenericESCPOS(object):
         self.device.write('\x1B\x45' + '\x01' if flag else '\x00')
 
 
-    def barcode(self, instance):
-        """
-        Print the given barcode instance, or any other object capable of
-        render itself.
-        """
-        self.device.write(instance.render())
-        time.sleep(0.25) # sleeps quarter-second for barcode to be printed
-        response = self.device.read()
-        return response
-
-
     def ean13(self, data, **kwargs):
         """
-        Shortcut method for print barcode EAN-13 symbol for the given data.
+        Render given ``data`` as **EAN-13** barcode symbology.
         """
-        code = BarcodeEAN13(data, **kwargs)
-        return self.barcode(code)
+        if not re.match(r'\d{13}', data):
+            raise ValueError('EAN-13 symbology requires 13 digits of data; '
+                    'got {:d} digits ("{!s}")'.format(len(data), data))
+        barcode.validate_barcode_args(**kwargs)
+        return self._ean13_impl(data, **kwargs)
+
+
+    def _ean13_impl(self, data, **kwargs):
+        raise NotImplementedError()
 
 
     def ean8(self, data, **kwargs):
         """
-        Shortcut method for print barcode EAN-8 symbol for the given data.
+        Render given ``data`` as **EAN-8** barcode symbology.
         """
-        code = BarcodeEAN8(data, **kwargs)
-        return self.barcode(code)
+        if not re.match(r'\d{8}', data):
+            raise ValueError('EAN-8 symbology requires 8 digits of data; '
+                    'got {:d} digits ("{!s}")'.format(len(data), data))
+        barcode.validate_barcode_args(**kwargs)
+        return self._ean8_impl(data, **kwargs)
+
+
+    def _ean8_impl(self, data, **kwargs):
+        raise NotImplementedError()
 
 
     def code128(self, data, **kwargs):
         """
-        Shortcut method for print barcode Code128 symbol for the given data.
+        Render given ``data`` as **Code128** barcode symbology.
         """
-        code = BarcodeCode128(data, **kwargs)
-        return self.barcode(code)
+        if not re.match(r'^[\x20-\x7F]+$', data):
+            raise ValueError('Invalid Code128 symbology. Code128 can encode '
+                    'any ASCII character ranging from 32 (20h) to 127 (7Fh); '
+                    'got "%s"' % data)
+        barcode.validate_barcode_args(**kwargs)
+        return self._code128_impl(data, **kwargs)
+
+
+    def _code128_impl(self, data, **kwargs):
+        raise NotImplementedError()
 
 
     def qrcode(self, data, **kwargs):
         """
-        Print QRCode symbol for the given data.
+        Render given ``data`` as `QRCode <http://www.qrcode.com/en/>`_.
         """
+        barcode.validate_qrcode_args(**kwargs)
+        return self._qrcode_impl(data, **kwargs)
+
+
+    def _qrcode_impl(self, data, **kwargs):
         raise NotImplementedError()
 
 
@@ -163,7 +176,7 @@ class GenericESCPOS(object):
             # For example:
             #
             #       self.hardware_alternatives.get('cutter-full-cut')(self)
-            # 
+            #
             # So, implementations or end-user-applications can replace
             # certain hardware functionalites, based on available features.
             #

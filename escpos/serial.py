@@ -50,9 +50,11 @@ def scan_ports():
     """
     Scan for known serial ports available in the underling system.
     Returns a tuple of tuples where each inner tuple contains the port
-    number and port name. For example::
+    number and port name. For example:
 
-        >>> scan_ports()
+    .. sourcecode:: python
+
+        scan_ports()
         ((0, '/dev/ttyS0'), (1, '/dev/ttyS1'), ...)
 
     """
@@ -505,14 +507,16 @@ class RTSCTSConnection(AbstractSerialConnection):
 class _SerialDumper(pyserial.Serial):
     """
     This class is used as a wrapper for ``pyserial.Serial`` to allow dumping
-    the data that is about to be sent over the serial connection. For example::
+    the data that is about to be sent over the serial connection. For example:
 
-        >>> settings = SerialSettings.as_from('/dev/ttyS5:9600,8,1,N')
-        >>> printer = GenericESCPOS(settings.get_device())
-        >>> printer.init()
+    .. sourcecode:: python
+
+        settings = SerialSettings.as_from('/dev/ttyS5:9600,8,1,N')
+        printer = GenericESCPOS(settings.get_device())
+        printer.init()
         1b 40                                            .@ 
 
-        >>> printer.text('Hello World!')
+        printer.text('Hello World!')
         48 65 6c 6c 6f 20 57 6f 72 6c 64 21              Hello World!    
         0a                                               .
 

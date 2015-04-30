@@ -29,46 +29,10 @@
 import re
 import time
 
+from .. import barcode
 from .. import feature
 from ..helpers import is_value_in
 from .epson import GenericESCPOS
-
-
-BARCODE_HRI_NONE = 0
-BARCODE_HRI_TOP = 1
-BARCODE_HRI_BOTTOM = 2
-BARCODE_HRI_BOTH = 3 # should be ignored in future normalization
-
-BARCODE_HRI_POSITIONING = (
-        (BARCODE_HRI_NONE, u'No HRI'),
-        (BARCODE_HRI_TOP, u'HRI on top of barcode'),
-        (BARCODE_HRI_BOTTOM, u'HRI on bottom of barcode'),
-        (BARCODE_HRI_BOTH, u'HRI on both top and bottom of bar code'),
-    )
-
-
-BARCODE_NORMAL_WIDTH = 2
-BARCODE_DOUBLE_WIDTH = 3
-BARCODE_QUADRUPLE_WIDTH = 4 # not sure about this in future normalization
-
-BARCODE_WIDTHS = (
-        (BARCODE_NORMAL_WIDTH, u'Normal width'),
-        (BARCODE_DOUBLE_WIDTH, u'Double width'),
-        (BARCODE_QUADRUPLE_WIDTH, u'Quadruple width'),
-    )
-
-
-BARCODE_HEIGHT_RATIO = 0.125 # mm
-
-BARCODE_HEIGHT_MIN = 2 # mm
-
-BARCODE_HEIGHT_MAX = 31 # mm (255 * 0.125)
-
-DEFAULT_BARCODE_WIDTH = BARCODE_NORMAL_WIDTH
-
-DEFAULT_BARCODE_HEIGHT = 20 # mm (~162 as stated by documentation)
-
-BARCODE_CODE128_PATTERN  = re.compile(r'^[\x20-\x7F]+$')
 
 
 class _CommandSet(object):
@@ -92,35 +56,6 @@ class _ESCBematech(_CommandSet):
     MP-4200 TH Programmer’s Manual, revision 1.0.
     """
 
-    def _configure_barcode(self, **kwargs):
-        self._set_barcode_hri(**kwargs)
-        self._set_barcode_height(**kwargs)
-        self._set_barcode_width(**kwargs)
-
-
-    def _set_barcode_hri(self, **kwargs):
-        hri = kwargs.get('barcode_hri', BARCODE_HRI_TOP)
-        if not is_value_in(BARCODE_HRI_POSITIONING, hri):
-            raise ValueError('Invalid HRI value: %s' % hri)
-        self._impl.device.write('\x1D\x48' + chr(hri))
-
-
-    def _set_barcode_height(self, **kwargs):
-        height = kwargs.get('barcode_height', DEFAULT_BARCODE_HEIGHT)
-        if BARCODE_HEIGHT_MIN <= height <= BARCODE_HEIGHT_MAX:
-            _height = int(height / BARCODE_HEIGHT_RATIO)
-            self._impl.device.write('\x1D\x68' + chr(_height))
-        else:
-            raise ValueError('Invalid barcode height: %s (mm)' % height)
-
-
-    def _set_barcode_width(self, **kwargs):
-        width = kwargs.get('barcode_width', DEFAULT_BARCODE_WIDTH)
-        if not is_value_in(BARCODE_WIDTHS, width):
-            raise ValueError('Invalid barcode width: %s' % width)
-        self._impl.device.write('\x1D\x77' + chr(width)) # man. pg. 40
-
-
     def set_condensed(self, flag):
         onoff = '\x0F' if flag else '\x48'
         self._impl.device.write('\x1B' + onoff)
@@ -131,17 +66,39 @@ class _ESCBematech(_CommandSet):
         self._impl.device.write('\x1B' + onoff)
 
 
-    def code128(self, data, **kwargs): # man. pg. 43
-        if not BARCODE_CODE128_PATTERN.match(data):
-            raise ValueError('Invalid Code128 symbology.')
+    def _barcode_configure(self, **kwargs):
+        if 'barcode_height' in kwargs:
+            barcode_height = kwargs.get('barcode_height')
+            self._impl.device.write('\x1D\x68' + chr(barcode_height))
 
-        self._configure_barcode(**kwargs)
+        if 'barcode_width' in kwargs:
+            widths = {
+                    barcode.BARCODE_NORMAL_WIDTH: 2,
+                    barcode.BARCODE_DOUBLE_WIDTH: 3,
+                    barcode.BARCODE_QUADRUPLE_WIDTH: 4,}
+            barcode_width = widths.get(kwargs.get('barcode_width'))
+            self._impl.device.write('\x1D\x77' + chr(barcode_width))
 
-        code = '\x1D\x6B\x49{}{}'.format(chr(len(data)), data)
-        self._impl.device.write(code)
-        time.sleep(0.25) # sleeps quarter-second for barcode to be printed
-        response = self._impl.device.read()
-        return response
+        if 'barcode_hri' in kwargs:
+            values = {
+                    barcode.BARCODE_HRI_NONE: 0,
+                    barcode.BARCODE_HRI_TOP: 1,
+                    barcode.BARCODE_HRI_BOTTOM: 2,
+                    barcode.BARCODE_HRI_BOTH: 3,}
+            barcode_hri = values.get(kwargs.get('barcode_hri'))
+            self._impl.device.write('\x1D\x48' + chr(barcode_hri))
+
+
+    def _barcode_render(self, command):
+        self._impl.device.write(command)
+        time.sleep(0.25)
+        return self._impl.device.read()
+
+
+    def code128(self, data, **kwargs):
+        self._barcode_configure(**kwargs)
+        return self._barcode_render(
+                '\x1D\x6B\x49{}{}'.format(chr(len(data)), data))
 
 
     def qrcode(self, data, **kwargs):
@@ -209,11 +166,11 @@ class MP4200TH(GenericESCPOS):
         self._escbema.set_emphasized(flag)
 
 
-    def code128(self, data, **kwargs):
+    def _code128_impl(self, data, **kwargs):
         return self._escbema.code128(data, **kwargs)
 
 
-    def qrcode(self, data, **kwargs):
+    def _qrcode_impl(self, data, **kwargs):
         return self._escbema.qrcode(data, **kwargs)
 
 
