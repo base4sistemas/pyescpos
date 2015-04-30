@@ -17,56 +17,31 @@
 # limitations under the License.
 #
 
-from __future__ import absolute_import
+"""
+    `Daruma Urmet <http://www.daruma.com.br/>`_ ESC/POS printer implementation.
+"""
 
 import time
 
 from .. import asc
+from .. import barcode
 from .. import feature
 from .epson import GenericESCPOS
-from ..helpers import is_value_in
 
 
-QRCODE_MAX_DATA_SIZE = 700
+_QRCODE_MAX_DATA_SIZE = 700
+_QRCODE_ECC_LEVEL_AUTO = 0
+_QRCODE_MODULE_SIZE_AUTO = 0
 
 
-QRCODE_MODULE_SIZE_AUTO = 0
-QRCODE_MODULE_SIZE_4 = 4
-QRCODE_MODULE_SIZE_5 = 5
-QRCODE_MODULE_SIZE_6 = 6
-QRCODE_MODULE_SIZE_7 = 7
-
-QRCODE_MODULE_SIZES = (
-        (QRCODE_MODULE_SIZE_AUTO, 'Automatic'),
-        (QRCODE_MODULE_SIZE_4, '4'),
-        (QRCODE_MODULE_SIZE_5, '5'),
-        (QRCODE_MODULE_SIZE_6, '6'),
-        (QRCODE_MODULE_SIZE_7, '7'),)
-
-
-QRCODE_ERROR_CORRECTION_AUTO = 0
-QRCODE_ERROR_CORRECTION_M = 77
-QRCODE_ERROR_CORRECTION_Q = 81
-QRCODE_ERROR_CORRECTION_H = 72
-
-QRCODE_ERROR_CORRECTION_LEVELS = (
-        (QRCODE_ERROR_CORRECTION_AUTO, 'Automatic'),
-        (QRCODE_ERROR_CORRECTION_M, 'Level M'),
-        (QRCODE_ERROR_CORRECTION_Q, 'Level Q'),
-        (QRCODE_ERROR_CORRECTION_H, 'Level H'),)
+_EAN13_ID = 1
+_EAN8_ID = 2
+_CODE128_ID = 5
 
 
 class DarumaGeneric(GenericESCPOS):
     """
-    Base implementation for Urmet Daruma ESC/POS printers. Known to work
-    on (or tested with) the following models/firmwares:
-
-    * Daruma DR700 L/H/M firmware 02.51.00
-    * Daruma DR700 L-e/H-e firmware 01.20.00
-    * Daruma DR700 L-e/H-e firmware 01.21.00
-
-    You can checkout `Urmet Daruma <http://www.daruma.com.br/>`_ web site for
-    other printer models (web site in brazillian portuguese only).
+    Base implementation for Urmet Daruma ESC/POS mini-printers.
     """
 
     def __init__(self, device, features={}):
@@ -102,41 +77,118 @@ class DarumaGeneric(GenericESCPOS):
         self.device.write(chr(asc.DC1) if flag else chr(asc.DC3))
 
 
-    def qrcode(self, data, 
-            module_size=QRCODE_MODULE_SIZE_AUTO,
-            error_correction_level=QRCODE_ERROR_CORRECTION_AUTO):
-        """
-        Print QRCode symbol for the given **unicode** data.
+    def _barcode_impl(self, processed_data, symbology, **kwargs):
+        barcode_height = _translate_barcode_height(
+                kwargs.get('barcode_height', 50))
 
-        This method is capable of rendering QRCode for Daruma mini-printer
-        models DR700 L, DR700 M and DR700 H, from firmware version 02.50.00.
-        This code is also tested with the DR700 L-e/H-e firmware 01.21.00.
-        """
+        barcode_width = _translate_barcode_width(
+                kwargs.get('barcode_width', barcode.BARCODE_NORMAL_WIDTH))
 
-        if not is_value_in(QRCODE_MODULE_SIZES, module_size):
-            raise ValueError('Unexpected module size: %s' % module_size)
+        barcode_hri = _translate_barcode_hri(
+                kwargs.get('barcode_hri', barcode.BARCODE_HRI_NONE))
 
-        if not is_value_in(QRCODE_ERROR_CORRECTION_LEVELS, 
-                error_correction_level):
-            raise ValueError('Unexpected error correction level: %s' % \
-                    error_correction_level)
+        command = '\x1B\x62{}{}{}{}{}\x00'.format(
+                chr(symbology),
+                chr(barcode_width),
+                chr(barcode_height),
+                chr(barcode_hri),
+                processed_data)
+
+        self.device.write(command)
+        time.sleep(0.25)
+        response = self.device.read()
+        return response
+
+
+    def _ean13_impl(self, data, **kwargs):
+        return self._barcode_impl(data[:12], _EAN13_ID, **kwargs)
+
+
+    def _ean8_impl(self, data, **kwargs):
+        return self._barcode_impl(data[:7], _EAN8_ID, **kwargs)
+
+
+    def _code128_impl(self, data, **kwargs):
+        return self._barcode_impl(data, _CODE128_ID, **kwargs)
+
+
+    def _qrcode_impl(self, data, **kwargs):
+
+        qrcode_ecc_level = _translate_qrcode_ecc_level(
+                kwargs.get('qrcode_ecc_level', None)) or _QRCODE_ECC_LEVEL_AUTO
+
+        qrcode_module_size = _translate_qrcode_module_size(
+                kwargs.get('qrcode_module_size', None)) or \
+                        _QRCODE_MODULE_SIZE_AUTO
 
         data_length = len(data)
 
-        if data_length > QRCODE_MAX_DATA_SIZE:
+        if data_length > _QRCODE_MAX_DATA_SIZE:
             raise ValueError('Too much data: %d length (max allowed is %d)' % (
-                    data_length, QRCODE_MAX_DATA_SIZE,))
+                    data_length, _QRCODE_MAX_DATA_SIZE,))
 
         size_L = data_length >> 8
         size_H = (data_length & 255) + 2
 
         command = '\x1B\x81' + \
                 chr(size_H) + chr(size_L) + \
-                chr(module_size) + \
-                chr(error_correction_level) + \
+                chr(qrcode_module_size) + \
+                chr(qrcode_ecc_level) + \
                 data
 
         self.device.write(command)
-        time.sleep(1) # sleeps one second for qrcode to be printed
+        time.sleep(0.5)
         response = self.device.read()
         return response
+
+
+class DR700(DarumaGeneric):
+    """
+    Urmet Daruma DR700 thermal printer implementation.
+    Support models DR700 L/H/M and DR700 L-e/H-e.
+    """
+    pass
+
+
+def _translate_barcode_height(value):
+    return 50 if value < 50 else value
+
+
+def _translate_barcode_width(value):
+    values = {
+            barcode.BARCODE_NORMAL_WIDTH: 2,
+            barcode.BARCODE_DOUBLE_WIDTH: 3,
+            barcode.BARCODE_QUADRUPLE_WIDTH: 5,
+        }
+    return values.get(value)
+
+
+def _translate_barcode_hri(value):
+    values = {
+            barcode.BARCODE_HRI_NONE: 0,
+            barcode.BARCODE_HRI_TOP: 0,
+            barcode.BARCODE_HRI_BOTTOM: 1,
+            barcode.BARCODE_HRI_BOTH: 0,
+        }
+    return values.get(value)
+
+
+def _translate_qrcode_ecc_level(value):
+    values = {
+            barcode.QRCODE_ERROR_CORRECTION_L: 77, # "L" == "M"
+            barcode.QRCODE_ERROR_CORRECTION_M: 77,
+            barcode.QRCODE_ERROR_CORRECTION_Q: 81,
+            barcode.QRCODE_ERROR_CORRECTION_H: 72
+        }
+    return values.get(value, None)
+
+
+def _translate_qrcode_module_size(value):
+    values = {
+            barcode.QRCODE_MODULE_SIZE_4: 4,
+            barcode.QRCODE_MODULE_SIZE_5: 5,
+            barcode.QRCODE_MODULE_SIZE_6: 6,
+            barcode.QRCODE_MODULE_SIZE_7: 7,
+            barcode.QRCODE_MODULE_SIZE_8: 7, # 8 == 7
+        }
+    return values.get(value, None)
