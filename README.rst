@@ -20,7 +20,7 @@ PyESCPOS
 
 -------
 
-A Python support for Epson |copy| ESC/POS |reg| compatible printers. 
+A Python support for Epson |copy| ESC/POS |reg| compatible printers.
 
 Read more at `Epson ESCPOS FAQ`_ (PDF document).
 
@@ -36,7 +36,7 @@ Current implementation was tested against following hardwares:
 +-------------------------+-------------------+-------------------+
 | Manufacturer            | Models            | Firmware Versions |
 +=========================+===================+===================+
-| `Urmet Daruma`_         | DR700 L/H/M       | 02.51.00,         |
+| `Urmet Daruma`_         | DR700 L/H/M and   | 02.51.00,         |
 |                         | DR700 L-e/H-e     | 01.20.00,         |
 |                         |                   | 01.21.00          |
 +-------------------------+-------------------+-------------------+
@@ -93,25 +93,33 @@ Bluetooth support requires `PyBlueZ`_ (*not yet implemented*).
 Printing Barcodes
 -----------------
 
-Printing ESC/POS barcodes is straightforward. Instantiate desired symbology,
-and call `barcode()` method. Or simply call convenient barcode methods
-``ean13``, ``ean8`` and ``code128``.
+There is a default set of parameters for printing barcodes. Each ESC/POS
+implementation will take care of the details and try their best to print your
+barcode as you asked.
 
 .. sourcecode:: python
 
+    from escpos import barcode
     from escpos.serial import SerialSettings
-    from escpos.barcode import BarcodeEAN13
     from escpos.impl.epson import GenericESCPOS
 
-    conn = SerialSettings.as_from('/dev/ttyS5:9600:8:1:N').get_connection()
+    conn = SerialSettings.as_from('COM1:9600:8:1:N').get_connection()
     printer = GenericESCPOS(conn)
     printer.init()
+    printer.code128('0123456789',
+            barcode_height=96, # ~12mm (~1/2")
+            barcode_width=barcode.BARCODE_DOUBLE_WIDTH,
+            barcode_hri=barcode.BARCODE_HRI_BOTTOM)
 
-    ean13 = BarcodeEAN13('4007817525074')
-    printer.barcode(ean13)
+    printer.lf()
 
-    # conveniently, use the shortcut method
-    printer.ean13('4007817525074')
+    printer.ean13('4007817525074',
+            barcode_height=120, # ~15mm (~9/16"),
+            barcode_width=barcode.BARCODE_NORMAL_WIDTH,
+            barcode_hri=barcode.BARCODE_HRI_TOP)
+
+    printer.cut()
+
 
 The barcode data should be complete, that is, an EAN-13 barcode is formed from
 twelve digits plus check-digit. Most of the ESC/POS commands implementations

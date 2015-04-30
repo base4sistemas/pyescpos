@@ -3,6 +3,12 @@ PyESCPOS Changes
 ================
 
 
+2015-04-30
+==========
+
+* Normalization of barcode parameters.
+
+
 2015-04-29
 ==========
 
