@@ -2,19 +2,19 @@
 PyESCPOS
 ========
 
-.. image:: https://pypip.in/status/pyescpos/badge.svg
+.. image:: https://img.shields.io/badge/status-planning-red.svg
     :target: https://pypi.python.org/pypi/pyescpos/
     :alt: Development status
 
-.. image:: https://pypip.in/py_versions/pyescpos/badge.svg
+.. image:: https://img.shields.io/badge/python%20version-2.7-blue.svg
     :target: https://pypi.python.org/pypi/pyescpos/
     :alt: Supported Python versions
 
-.. image:: https://pypip.in/license/pyescpos/badge.svg
+.. image:: https://img.shields.io/pypi/l/pyescpos.svg
     :target: https://pypi.python.org/pypi/pyescpos/
     :alt: License
 
-.. image:: https://pypip.in/version/pyescpos/badge.svg
+.. image:: https://img.shields.io/pypi/v/pyescpos.svg
     :target: https://pypi.python.org/pypi/pyescpos/
     :alt: Latest version
 
