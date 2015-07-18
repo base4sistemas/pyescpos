@@ -19,7 +19,7 @@
 
 """
     `Bematech S.A. <http://www.bematechus.com/>`_ ESC/POS printer implementation
-    and ESC/POS derivative command sets. 
+    and ESC/POS derivative command sets.
 
     This manufacturer embed two sets of commands, the default ESC/POS and
     another one called *ESC/Bematech* which is based on their own standards,
@@ -31,8 +31,16 @@ import time
 
 from .. import barcode
 from .. import feature
+from ..helpers import CashDrawerException
 from ..helpers import is_value_in
 from .epson import GenericESCPOS
+
+
+_CASHDRAWER_DEFAULT_DURATION = 200
+"""Duration for cash drawer activation (kick) in milliseconds."""
+
+_CASHDRAWER_DURATION_MIN = 50
+_CASHDRAWER_DURATION_MAX = 250
 
 
 class _CommandSet(object):
@@ -44,7 +52,7 @@ class _CommandSet(object):
 
 class _ESCPOS(_CommandSet):
     """
-    Implementation of the ESC/POS standard according to the POS Printer 
+    Implementation of the ESC/POS standard according to the POS Printer
     MP-4200 TH Programmer’s Manual, revision 1.0.
     """
     pass
@@ -52,7 +60,7 @@ class _ESCPOS(_CommandSet):
 
 class _ESCBematech(_CommandSet):
     """
-    Implementation of the ESC/Bematech standard according to the POS Printer 
+    Implementation of the ESC/Bematech standard according to the POS Printer
     MP-4200 TH Programmer’s Manual, revision 1.0.
     """
 
@@ -103,10 +111,10 @@ class _ESCBematech(_CommandSet):
 
     def qrcode(self, data, **kwargs):
         # IMPORTANT WARNING
-        # 
+        #
         # Bematech provides a poor documentation for QRCodes [1] in a couple
         # of "developer partners" articles at their web-site, available only in
-        # brazilian portuguese, despite its name. These articles does not 
+        # brazilian portuguese, despite its name. These articles does not
         # describe the meaning of 4 parameters.
         #
         # The values used bellow was borrowed from ACBr project [2], where
@@ -134,11 +142,36 @@ class _ESCBematech(_CommandSet):
                 chr(size_L) + \
                 chr(size_H) + \
                 data
-                    
+
         self._impl.device.write(command)
         time.sleep(1) # sleeps one second for qrcode to be printed
         response = self._impl.device.read()
         return response
+
+
+    def kick_drawer(self, port=0, **kwargs):
+        # although concrete implementations may have any number of available
+        # cash drawer ports, ESC/Bematech foresees two cash drawers anyways
+        if port not in xrange(2):
+            raise CashDrawerException('invalid cash drawer port: {!r} '
+                    '(ESC/Bematech foresees only ports 0 and 1)'.format(port))
+
+        duration = kwargs.get('duration', _CASHDRAWER_DEFAULT_DURATION)
+        if duration not in xrange(
+                _CASHDRAWER_DURATION_MIN, _CASHDRAWER_DURATION_MAX + 1):
+            raise ValueError('illegal cash drawer activation duration: {!r} '
+                    '(in milliseconds, ranging from {!r} up to {!r}'.format(
+                            duration,
+                            _CASHDRAWER_DURATION_MIN,
+                            _CASHDRAWER_DURATION_MAX))
+
+        if port == 0:
+            # activate cash drawer #1 (ESC 76h)
+            self.device.write('\x1B\x76' + chr(duration))
+
+        elif port == 1:
+            # activate cash drawer #2 (ESC 80h)
+            self.device.write('\x1B\x80' + chr(duration))
 
 
 class MP4200TH(GenericESCPOS):
@@ -152,6 +185,8 @@ class MP4200TH(GenericESCPOS):
         super(MP4200TH, self).__init__(device)
         self.hardware_features.update({
                 feature.CUTTER: True,
+                feature.CASHDRAWER_PORTS: True,
+                feature.CASHDRAWER_AVAILABLE_PORTS: 1,
             })
         self.hardware_features.update(features)
         self._escpos = _ESCPOS(self)
@@ -166,6 +201,12 @@ class MP4200TH(GenericESCPOS):
         self._escbema.set_emphasized(flag)
 
 
+    def cut(self, partial=True):
+        if self.hardware_features.get(feature.CUTTER, False):
+            param = '\x6D' if partial else '\x69'
+            self.device.write('\x1B' + param)
+
+
     def _code128_impl(self, data, **kwargs):
         return self._escbema.code128(data, **kwargs)
 
@@ -174,7 +215,6 @@ class MP4200TH(GenericESCPOS):
         return self._escbema.qrcode(data, **kwargs)
 
 
-    def cut(self, partial=True):
-        if self.hardware_features.get(feature.CUTTER, False):
-            param = '\x6D' if partial else '\x69'
-            self.device.write('\x1B' + param)
+    def _kick_drawer_impl(self, port=0, **kwargs):
+        return self._escbema.kick_drawer(port=port, **kwargs)
+

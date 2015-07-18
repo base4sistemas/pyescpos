@@ -15,10 +15,12 @@
 # limitations under the License.
 #
 
+import io
+import os
+import sys
+
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
-import io
-import sys
 
 import escpos
 
@@ -33,7 +35,12 @@ def read(*filenames, **kwargs):
     return sep.join(buf)
 
 
-long_description = read('README.rst', 'CHANGES.rst')
+def read_install_requires():
+    content = read('requirements.txt')
+    return content.strip().split(os.linesep)
+
+
+long_description = read('README.rst')
 
 
 class PyTest(TestCommand):
@@ -60,12 +67,10 @@ setup(
         description='Support for Epson ESC/POS printer command system.',
         long_description=long_description,
         packages=[
-                'escpos', 
+                'escpos',
                 'escpos.impl'
             ],
-        install_requires=[
-                'pyserial >= 2.7'
-            ],
+        install_requires=read_install_requires(),
         extras_require={
                 'testing': [
                         'pytest',

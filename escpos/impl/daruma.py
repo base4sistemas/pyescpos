@@ -48,6 +48,8 @@ class DarumaGeneric(GenericESCPOS):
         super(DarumaGeneric, self).__init__(device)
         self.hardware_features.update({
                 feature.CUTTER: False,
+                feature.CASHDRAWER_PORTS: True,
+                feature.CASHDRAWER_AVAILABLE_PORTS: 1,
             })
         self.hardware_features.update(features)
 
@@ -65,8 +67,8 @@ class DarumaGeneric(GenericESCPOS):
 
 
     def set_expanded(self, flag):
-        cmd = '\x1B\x57' + '\x01' if flag else '\x00'
-        self.device.write(cmd)
+        param = '\x01' if flag else '\x00'
+        self.device.write('\x1B\x57' + param)
 
 
     def set_condensed(self, flag):
@@ -140,6 +142,10 @@ class DarumaGeneric(GenericESCPOS):
         time.sleep(0.5)
         response = self.device.read()
         return response
+
+
+    def _kick_drawer_impl(self, port=0, **kwargs):
+        self.device.write('\x1B\x70')
 
 
 class DR700(DarumaGeneric):

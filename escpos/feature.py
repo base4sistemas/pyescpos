@@ -22,10 +22,14 @@
 """
 
 CUTTER = 'cutter'
+CASHDRAWER_PORTS = 'cashdrawer-ports'
+CASHDRAWER_AVAILABLE_PORTS = 'cashdrawer-available-ports'
 
 
 _SET = {
         CUTTER: False,
+        CASHDRAWER_PORTS: True,
+        CASHDRAWER_AVAILABLE_PORTS: 2,
     }
 """
 Default features set.
