@@ -2,12 +2,13 @@ __pycache__/
 
 /build/
 /dist/
-/PyESCPOS.egg-info/
-/*.egg/
+/*.egg-info/
+/*.eggs/
 
 *.pyc
 *.pyo
 *.pyd
+*.egg
 *.sublime-workspace
 
 # a root `sandbox.py` can be used to write temporary essays and 

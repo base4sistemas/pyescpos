@@ -25,6 +25,10 @@ class TimeoutException(Exception):
     pass
 
 
+class CashDrawerException(Exception):
+    pass
+
+
 class TimeoutHelper(object):
 
     def __init__(self, timeout=1):
@@ -64,7 +68,7 @@ def hexdump(data):
     hexpanel[-1] = hexpanel[-1] + (chr(32) * (47 - len(hexpanel[-1])))
     chrpanel[-1] = chrpanel[-1] + (chr(32) * (16 - len(chrpanel[-1])))
     return '\n'.join('%s  %s' % (h, c) for h, c in zip(hexpanel, chrpanel))
-    
+
 
 def is_value_in(constants_group, value):
     """
@@ -75,4 +79,3 @@ def is_value_in(constants_group, value):
         if const_value == value:
             return True
     return False
-    

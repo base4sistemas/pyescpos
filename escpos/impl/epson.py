@@ -106,7 +106,8 @@ class GenericESCPOS(object):
 
 
     def set_emphasized(self, flag):
-        self.device.write('\x1B\x45' + '\x01' if flag else '\x00')
+        param = '\x01' if flag else '\x00'
+        self.device.write('\x1B\x45' + param)
 
 
     def ean13(self, data, **kwargs):
@@ -190,3 +191,41 @@ class GenericESCPOS(object):
             #
             param = '\x01' if partial else '\x00'
             self.device.write('\x1D\x56' + param)
+
+
+    def kick_drawer(self, port=0, **kwargs):
+        """Kick drawer connected to the given port.
+
+        In this implementation, cash drawers are identified according to the
+        port in which they are connected. This relation between drawers and
+        ports does not exists in the ESC/POS specification and it is just a
+        design decision to normalize cash drawers handling. From the user
+        application perspective, drawers are simply connected to port 0, 1, 2,
+        and so on.
+
+        If printer does not have this feature then nothing happens.
+
+        :param int number: The port number to kick drawer (default is ``0``).
+
+        :raises CashDrawerException: If given port does not exists.
+        """
+        if self.hardware_features.get(feature.CASHDRAWER_PORTS, False):
+            # if feature is available assume at least one port is available
+            max_ports = self.hardware_features.get(
+                    feature.CASHDRAWER_AVAILABLE_PORTS, 1)
+
+            if port not in xrange(max_ports):
+                raise CashDrawerException('invalid cash drawer port: {!r} '
+                        '(available ports are {!r})'.format(
+                                port, range(max_ports)))
+
+            return self._kick_drawer_impl(port=port, **kwargs)
+
+
+    def _kick_drawer_impl(self, port=0, **kwargs):
+        if port not in xrange(2):
+            raise CashDrawerException(
+                    'invalid cash drawer port: {!r}'.format(port))
+
+        param = '\x00' if port == 0 else '\x01' # pulse to pin 2 or 5
+        self.device.write('\x1B\x70' + param)

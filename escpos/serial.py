@@ -164,7 +164,7 @@ class SerialSettings(object):
             if not hasattr(self, attribute):
                 raise AttributeError('%s has no attribute \'%s\'' % (
                         self.__class__.__name__, key,))
-            setattr(self, key, value)
+            setattr(self, attribute, value)
 
         self._portname = ''
         self._fix_port_assignment()
@@ -235,7 +235,7 @@ class SerialSettings(object):
         if value not in [v for v,n in get_baudrates()]:
             raise ValueError('Unsupported baud rate value: %s' % value)
         self._baudrate = value
-    
+
 
     @property
     def databits(self):
@@ -247,7 +247,7 @@ class SerialSettings(object):
         if value not in [v for v,n in get_databits()]:
             raise ValueError('Unsupported byte size value: %s' % value)
         self._databits = value
-    
+
 
     @property
     def stopbits(self):
@@ -283,7 +283,7 @@ class SerialSettings(object):
         if value not in [v for v,n in get_protocols()]:
             raise ValueError('Unknown protocol: %s' % value)
         self._protocol = value
-    
+
 
     def is_rtscts(self):
         return self.protocol == RTSCTS
@@ -306,7 +306,7 @@ class SerialSettings(object):
         .. warn::
             This may be a little bit confusing since there is no effective
             connection but an implementation of a connection pattern.
-            
+
         """
         if self.is_rtscts():
             return RTSCTSConnection(self, **kwargs)
@@ -336,16 +336,16 @@ class SerialSettings(object):
                 raise ValueError('Cannot assign port name/number '
                         'based on port assignment type %r' % self._port)
 
-        self._port = port_number
-        self._portname = port_name or ''
+            self._port = port_number
+            self._portname = port_name or ''
 
 
     @staticmethod
     def as_from(value):
         """
         Constructs an instance of :class:`SerialSettings` from a string
-        representation, that looks like ``/dev/ttyS0:9600,8,1,N,RTSCTS``, 
-        describing, in order, the serial port name, baud rate, byte size, 
+        representation, that looks like ``/dev/ttyS0:9600,8,1,N,RTSCTS``,
+        describing, in order, the serial port name, baud rate, byte size,
         stop bits, parity and flow control protocol.
 
         Valid string representations are (in cases where protocol is not
@@ -363,7 +363,7 @@ class SerialSettings(object):
 
         if len(values) == 5:
             values.append(RTSCTS)
-        
+
         if len(keys) != len(values):
             raise ValueError('Unknown serial port string format: %s '
                     '(expecting something like "COM1:9600,8,1,N,RTSCTS")' % (
@@ -402,9 +402,9 @@ class AbstractSerialConnection(object):
     def __init__(self, settings,
             read_timeout=DEFAULT_READ_TIMEOUT,
             write_timeout=DEFAULT_WRITE_TIMEOUT):
-        
+
         super(AbstractSerialConnection, self).__init__()
-        
+
         self.read_timeout = read_timeout
         self.write_timeout = write_timeout
         self.comport = None
@@ -445,6 +445,7 @@ class AbstractSerialConnection(object):
                 self.comport.close()
 
         _impl = _SerialDumper if self.hex_dump else pyserial.Serial
+
         self.comport = _impl(
                 port=self.settings.port,
                 baudrate=self.settings.baudrate,
@@ -456,7 +457,7 @@ class AbstractSerialConnection(object):
                 xonxoff=self.settings.is_xonxoff(),
                 timeout=self.read_timeout,
                 writeTimeout=self.write_timeout)
-        
+
         self.comport.setRTS(level=1)
         self.comport.setDTR(level=1)
         self.comport.flushInput()
@@ -469,7 +470,7 @@ class AbstractSerialConnection(object):
 
     def unicode_to_bytearray(self, unicode_string, errors='ignore'):
         device_encoded_string = self.unicode_to_device_encoding(unicode_string)
-        return bytearray(device_encoded_string, 
+        return bytearray(device_encoded_string,
                 encoding=self.device_encoding,
                 errors=errors)
 
@@ -481,13 +482,13 @@ class RTSCTSConnection(AbstractSerialConnection):
 
     protocol_timeout = 5
 
-    def __init__(self, settings, 
+    def __init__(self, settings,
             read_timeout=DEFAULT_READ_TIMEOUT,
             write_timeout=DEFAULT_WRITE_TIMEOUT,
             protocol_timeout=DEFAULT_PROTOCOL_TIMEOUT):
-        
+
         super(RTSCTSConnection, self).__init__(settings,
-                read_timeout=read_timeout, 
+                read_timeout=read_timeout,
                 write_timeout=write_timeout)
 
         self.protocol_timeout = protocol_timeout
@@ -514,10 +515,10 @@ class _SerialDumper(pyserial.Serial):
         settings = SerialSettings.as_from('/dev/ttyS5:9600,8,1,N')
         printer = GenericESCPOS(settings.get_device())
         printer.init()
-        1b 40                                            .@ 
+        1b 40                                            .@
 
         printer.text('Hello World!')
-        48 65 6c 6c 6f 20 57 6f 72 6c 64 21              Hello World!    
+        48 65 6c 6c 6f 20 57 6f 72 6c 64 21              Hello World!
         0a                                               .
 
     """
