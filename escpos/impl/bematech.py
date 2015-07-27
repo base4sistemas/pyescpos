@@ -64,6 +64,11 @@ class _ESCBematech(_CommandSet):
     MP-4200 TH Programmer’s Manual, revision 1.0.
     """
 
+    def set_expanded(self, flag):
+        onoff = '\x31' if flag else '\x30'
+        self._impl.device.write('\x1B\x57' + onoff) # ESC W n
+
+
     def set_condensed(self, flag):
         onoff = '\x0F' if flag else '\x48'
         self._impl.device.write('\x1B' + onoff)
@@ -191,6 +196,10 @@ class MP4200TH(GenericESCPOS):
         self.hardware_features.update(features)
         self._escpos = _ESCPOS(self)
         self._escbema = _ESCBematech(self)
+
+
+    def set_expanded(self, flag):
+        self._escbema.set_expanded(flag)
 
 
     def set_condensed(self, flag):
