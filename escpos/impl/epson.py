@@ -22,6 +22,7 @@ import time
 
 from .. import barcode
 from .. import feature
+from ..helpers import is_value_in
 
 
 class GenericESCPOS(object):
@@ -97,12 +98,24 @@ class GenericESCPOS(object):
         self.device.write('\x1B\x61\x02')
 
 
+    def set_text_size(self, width, height):
+        if (0 <= width <= 7) and (0 <= height <= 7):
+            size = 16 * width + height
+            self.device.write('\x1D\x21' + chr(size))
+        else:
+            raise ValueError('Width and height should be between 0 and 7 '
+                    '(1x through 8x of magnification); got: '
+                    'width={!r}, height={!r}'.format(width, height))
+
+
     def set_expanded(self, flag):
-        raise NotImplementedError()
+        param = '\x20' if flag else '\x00'
+        self.device.write('\x1B\x21')
 
 
     def set_condensed(self, flag):
-        raise NotImplementedError()
+        param = '\x0F' if flag else '\x12' # SI (on), DC2 (off)
+        self.device.write('\x1B' + param)
 
 
     def set_emphasized(self, flag):
@@ -141,11 +154,22 @@ class GenericESCPOS(object):
 
 
     def code128(self, data, **kwargs):
-        """
-        Render given ``data`` as **Code128** barcode symbology.
+        """Renders given ``data`` as **Code 128** barcode symbology.
+
+        :param str codeset: Optional. Keyword argument for the subtype (code
+            set) to render. Defaults to :attr:`escpos.barcode.CODE128_A`.
+
+        .. warning::
+
+            You should draw up your data according to the subtype (code set).
+            The default is **Code 128 A** and there is no way (yet) to mix code
+            sets in a single barcode rendering (at least not uniformly).
+
+            Implementations may simply ignore the code set.
+
         """
         if not re.match(r'^[\x20-\x7F]+$', data):
-            raise ValueError('Invalid Code128 symbology. Code128 can encode '
+            raise ValueError('Invalid Code 128 symbology. Code 128 can encode '
                     'any ASCII character ranging from 32 (20h) to 127 (7Fh); '
                     'got "%s"' % data)
         barcode.validate_barcode_args(**kwargs)
@@ -229,3 +253,116 @@ class GenericESCPOS(object):
 
         param = '\x00' if port == 0 else '\x01' # pulse to pin 2 or 5
         self.device.write('\x1B\x70' + param)
+
+
+class TMT20(GenericESCPOS):
+    """Epson TM-T20 thermal printer."""
+
+    def __init__(self, device, features={}):
+        super(TMT20, self).__init__(device)
+        self.hardware_features.update({
+                feature.CUTTER: True,
+                feature.CASHDRAWER_PORTS: True,
+                feature.CASHDRAWER_AVAILABLE_PORTS: 1,
+            })
+        self.hardware_features.update(features)
+
+
+    def set_expanded(self, flag):
+        w = 1 if flag else 0 # magnification (Nx)
+        self.set_text_size(w, 0)
+
+
+    def set_condensed(self, flag):
+        param = '\x01' if flag else '\x00'
+        self.device.write('\x1B\x21' + param)
+
+
+    def _code128_impl(self, data, **kwargs):
+        codeset = kwargs.get('codeset', 'A')
+        if not is_value_in(barcode.CODE128_CODESETS, codeset):
+            raise ValueError('Unknown Code 128 code set: {!r}'.format(codeset))
+
+        encoded_data = '{{{0}{1}'.format(codeset, data) # {<codeset><data>
+        commands = barcode.gs_k_barcode(barcode.CODE128, encoded_data, **kwargs)
+        for cmd in commands:
+            self.device.write(cmd)
+
+        time.sleep(0.25) # wait for barcode to be printed
+        return self.device.read()
+
+
+    def _qrcode_error_correction_value(self, **kwargs):
+        ecc_map = {
+                barcode.QRCODE_ERROR_CORRECTION_L: '\x30',  # 48d (~7%, default)
+                barcode.QRCODE_ERROR_CORRECTION_M: '\x31',  # 49d (~15%)
+                barcode.QRCODE_ERROR_CORRECTION_Q: '\x32',  # 50d (~25%)
+                barcode.QRCODE_ERROR_CORRECTION_H: '\x33',  # 51d (~30%)
+            }
+        return ecc_map[kwargs.get('qrcode_ecc_level',
+                barcode.QRCODE_ERROR_CORRECTION_L)]
+
+
+    def _qrcode_module_size_value(self, **kwargs):
+        modsize_map = {
+                barcode.QRCODE_MODULE_SIZE_4: '\x04',
+                barcode.QRCODE_MODULE_SIZE_5: '\x05',
+                barcode.QRCODE_MODULE_SIZE_6: '\x06',
+                barcode.QRCODE_MODULE_SIZE_7: '\x07',
+                barcode.QRCODE_MODULE_SIZE_8: '\x08',
+            }
+        return modsize_map[kwargs.get('qrcode_module_size',
+                barcode.QRCODE_MODULE_SIZE_4)]
+
+
+    def _qrcode_impl(self, data, **kwargs):
+        num_bytes = 3 + len(data) # number of bytes after `pH`
+        # compute HI,LO bytes for the number of bytes (parameters) after `pH`;
+        # this is possibly the safest way, but alternatives are:
+        #
+        #     size_H = num_bytes / 256
+        #     size_L = num_bytes % 256
+        #
+        # or:
+        #
+        #     size_H, size_L = divmod(num_bytes, 256)
+        #
+        size_H = (num_bytes >> 8) & 0xff
+        size_L = num_bytes & 0xff
+
+        commands = []
+        commands.append(['\x1D\x28\x6B',      # GS(k
+                chr(size_L), chr(size_H), # pL pH
+                '\x31',     # cn (49 <=> 0x31 <=> QRCode)
+                '\x50',     # fn (80 <=> 0x50 <=> store symbol in memory)
+                '\x30',     #  m (48 <=> 0x30 <=> literal value)
+                data,
+            ])
+
+        commands.append(['\x1D\x28\x6B',      # GS(k
+                '\x03\x00', # pL pH
+                '\x31',     # cn (49 <=> 0x31 <=> QRCode)
+                '\x45',     # fn (69 <=> 0x45 <=> error correction)
+                self._qrcode_error_correction_value(**kwargs),
+            ])
+
+        commands.append(['\x1D\x28\x6B',      # GS(k
+                '\x03\x00', # pL pH
+                '\x31',     # cn (49 <=> 0x31 <=> QRCode)
+                '\x43',     # fn (67 <=> 0x43 <=> module size)
+                self._qrcode_module_size_value(**kwargs),
+            ])
+
+        commands.append(['\x1D\x28\x6B',      # GS(k
+                '\x03\x00', # pL pH
+                '\x31',     # cn (49 <=> 0x31 <=> QRCode)
+                '\x51',     # fn (81 <=> 0x51 <=> print 2D symbol)
+                '\x30',     #  m (48 <=> 0x30 <=> literal value)
+            ])
+
+        for cmd in commands:
+            self.device.write(''.join(cmd))
+
+        time.sleep(1) # sleeps one second for qrcode to be printed
+        return self.device.read()
+

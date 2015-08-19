@@ -20,12 +20,26 @@ PyESCPOS
 
 -------
 
-A Python support for Epson |copy| ESC/POS |reg| compatible printers.
+A Python support for Epson |copy| ESC/POS |reg| compatible printers. Read more
+at `Epson ESCPOS FAQ`_ (PDF document).
 
-Read more at `Epson ESCPOS FAQ`_ (PDF document).
+This project is inspired on Manuel F. Martinez work for `python-escpos`_
+implementation, among other projects, whose specific bits of work (available
+here on Github and many other open-source repositories) has helped so much.
 
-This library is inspired on Manuel F. Martinez work for `python-escpos`_
-implementation.
+The ESC/POS |reg| is a standard that every manufacturer tend to modify to suit
+their (even already implemented) needs. Indeed, there is no standard but
+something awkward, an illusion of a standard. On the surface, one can say
+that it's pretty much the same, but when you look just a little bit more deeper,
+you quickly realize that they are almost completely different, even between
+models belonging to the same manufacturer.
+
+This project aims to make viable the use, at the *point-of-sale* (POS), of
+different printers (the most common ones, at least) that are minimally based on
+ESC/POS |reg| standard, without need to modify the client application code. To
+achieve this, it is necessary to draw a lowest common denominator between
+features and provide implementations that seek to meet this minimum. At this
+stage of the project, "minimum" is still a fuzzy word.
 
 
 Tested Hardware
@@ -36,6 +50,9 @@ Current implementation was tested against following hardwares:
 +-------------------------+-------------------+-------------------+
 | Manufacturer            | Models            | Firmware Versions |
 +=========================+===================+===================+
+| `Epson`_                | TM-T20            | 1.14              |
+|                         |                   |                   |
++-------------------------+-------------------+-------------------+
 | `Urmet Daruma`_         | DR700 L/H/M and   | 02.51.00,         |
 |                         | DR700 L-e/H-e     | 01.20.00,         |
 |                         |                   | 01.21.00          |
@@ -161,6 +178,6 @@ It is important that you read this **disclaimer**.
 .. _`PySerial`: http://pyserial.sourceforge.net/
 .. _`PyUSB`: http://walac.github.io/pyusb/
 .. _`PyBlueZ`: https://github.com/manuelnaranjo/PyBlueZ
+.. _`Epson`: http://www.epson.com/
 .. _`Urmet Daruma`: http://daruma.com.br/
 .. _`Bematech S/A`: http://www.bematechus.com/
-

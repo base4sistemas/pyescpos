@@ -28,6 +28,58 @@
 from .helpers import is_value_in
 
 
+NUL_TERM_UPC_A = '\x00'
+NUL_TERM_UPC_E = '\x01'
+NUL_TERM_JAN13_EAN13 = '\x02'
+NUL_TERM_JAN8_EAN8 = '\x03'
+NUL_TERM_CODE39 = '\x04'
+NUL_TERM_ITF = '\x05'
+NUL_TERM_CODABAR_NW_7 = '\x06'
+
+NUL_TERM_SYMBOLOGIES = (
+        (NUL_TERM_UPC_A, 'UPC-A'),
+        (NUL_TERM_UPC_E, 'UPC-E'),
+        (NUL_TERM_JAN13_EAN13, 'JAN-13/EAN-13'),
+        (NUL_TERM_JAN8_EAN8, 'JAN-8/EAN-8'),
+        (NUL_TERM_CODE39, 'Code 39'),
+        (NUL_TERM_ITF, 'ITF-14'),
+        (NUL_TERM_CODABAR_NW_7, 'Codabar NW-7'),
+    )
+
+
+UPC_A = 'A'
+UPC_E = 'B'
+JAN13_EAN13 = 'C'
+JAN8_EAN8 = 'D'
+CODE39 = 'E'
+ITF = 'F'
+CODABAR_NW_7 = 'G'
+CODE93 = 'H'
+CODE128 = 'I'
+GS1_128 = 'J'
+GS1_DATABAR_OMNIDIRECTIONAL = 'K'
+GS1_DATABAR_TRUNCATED = 'L'
+GS1_DATABAR_LIMITED = 'M'
+GS1_DATABAR_EXPANDED = 'N'
+
+SYMBOLOGIES = (
+        (UPC_A, 'UPC-A'),
+        (UPC_E, 'UPC-E'),
+        (JAN13_EAN13, 'JAN-13/EAN-13'),
+        (JAN8_EAN8, 'JAN-8/EAN-8'),
+        (CODE39, 'Code 39'),
+        (ITF, 'ITF-14'),
+        (CODABAR_NW_7, 'Codabar NW-7'),
+        (CODE93, 'Code 93'),
+        (CODE128, 'Code 128'),
+        (GS1_128, 'GS1-128 (UCC/EAN-128)'),
+        (GS1_DATABAR_OMNIDIRECTIONAL, 'GS1 DataBar Omnidirectional'),
+        (GS1_DATABAR_TRUNCATED, 'GS1 DataBar Truncated'),
+        (GS1_DATABAR_LIMITED, 'GS1 DataBar Limited'),
+        (GS1_DATABAR_EXPANDED, 'GS1 DataBar Expanded'),
+    )
+
+
 BARCODE_NORMAL_WIDTH = 1
 BARCODE_DOUBLE_WIDTH = 2
 BARCODE_QUADRUPLE_WIDTH = 3
@@ -57,6 +109,16 @@ BARCODE_HRI_POSITIONING = (
 Possible barcode HRI (*human readable information*) positionings.
 """
 
+
+CODE128_A = 'A'
+CODE128_B = 'B'
+CODE128_C = 'C'
+
+CODE128_CODESETS = (
+        (CODE128_A, 'Code 128 A'),
+        (CODE128_B, 'Code 128 B'),
+        (CODE128_C, 'Code 128 C'),
+    )
 
 QRCODE_ERROR_CORRECTION_L = 'L'
 QRCODE_ERROR_CORRECTION_M = 'M'
@@ -115,9 +177,81 @@ _QRCODE_ARGS = {
     }
 
 
+
+def gs_k_barcode_configure(**kwargs):
+    commands = []
+
+    if 'barcode_height' in kwargs:
+        barcode_height = kwargs.get('barcode_height')
+        commands.append('\x1D\x68' + chr(barcode_height))
+
+    if 'barcode_width' in kwargs:
+        widths = {
+                BARCODE_NORMAL_WIDTH: 2,
+                BARCODE_DOUBLE_WIDTH: 3,
+                BARCODE_QUADRUPLE_WIDTH: 4,}
+        barcode_width = widths.get(kwargs.get('barcode_width'))
+        commands.append('\x1D\x77' + chr(barcode_width))
+
+    if 'barcode_hri' in kwargs:
+        values = {
+                BARCODE_HRI_NONE: 0,
+                BARCODE_HRI_TOP: 1,
+                BARCODE_HRI_BOTTOM: 2,
+                BARCODE_HRI_BOTH: 3,}
+        barcode_hri = values.get(kwargs.get('barcode_hri'))
+        commands.append('\x1D\x48' + chr(barcode_hri))
+
+    return commands
+
+
+def gs_k_barcode(symbology, data, **kwargs):
+    """Build standard ESC/POS barcode through ``GS k`` command set. Keyword
+    arguments can be used to configure barcode height, bar widths and HRI
+    positioning. User applications should not use this function. This function
+    is provided as an ESC/POS "standard barcode command set" to be used by
+    specific implementations.
+
+    :param symbology: The symbology to build. Should be one of the constants in
+        :attr:`NUL_TERM_SYMBOLOGIES` or :attr:`SYMBOLOGIES`.
+
+    :param data: The barcode data. You should draw up your data according to
+        the symbology. If you do not want to worry about data formating then
+        you should use barcode methods provided by the reference ESC/POS
+        implementation :class:`~escpos.impl.epson.GenericESCPOS` instead of
+        this function.
+
+    :param barcode_height: Optional.
+    :param barcode_width: Optional.
+    :param barcode_hri: Optional.
+
+    :return: A list of commands, ready to be sent to the device.
+    :rtype: list
+
+    """
+    commands = gs_k_barcode_configure(**kwargs)
+
+    if symbology in (
+            NUL_TERM_UPC_A,
+            NUL_TERM_UPC_E,
+            NUL_TERM_JAN13_EAN13,
+            NUL_TERM_JAN8_EAN8,
+            NUL_TERM_CODE39,
+            NUL_TERM_ITF,
+            NUL_TERM_CODABAR_NW_7,):
+        # null-terminated
+        commands.append('\x1D\x6B{}{}\x00'.format(symbology, data))
+
+    else:
+        commands.append('\x1D\x6B{}{}{}\x00'.format(
+                symbology, chr(len(data)), data))
+
+    return commands
+
+
 def validate_barcode_args(**kwargs):
     """
-    Validate QRCode keyword arguments.
+    Validate barcode keyword arguments.
 
     .. sourcecode::
 

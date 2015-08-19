@@ -298,18 +298,22 @@ class SerialSettings(object):
 
 
     def get_connection(self, **kwargs):
-        """
-        Return a serial connection implementation suitable for the specified
+        """Return a serial connection implementation suitable for the specified
         protocol. Raises ``RuntimeError`` if there is no implementation for
         the given protocol.
 
         .. warn::
+
             This may be a little bit confusing since there is no effective
             connection but an implementation of a connection pattern.
 
         """
         if self.is_rtscts():
             return RTSCTSConnection(self, **kwargs)
+
+        if self.is_dsrdtr():
+            return DSRDTRConnection(self, **kwargs)
+
         else:
             raise RuntimeError('Serial protocol "%s" is not available.' % (
                     self.protocol))
@@ -379,36 +383,30 @@ class SerialSettings(object):
 
 class AbstractSerialConnection(object):
 
-    settings = None
-    """
-    An instance of :class:`SerialSettings`.
-    """
-
-    comport = None
-    """
-    The gateway to the serial communications port, usually an
-    instance of ``serial.Serial`` from the **PySerial** library.
-    """
-
-    read_timeout = 1
-
-    write_timeout = 1
-
-    device_encoding = 'CP850'
-
-    hex_dump = True
-
-
     def __init__(self, settings,
             read_timeout=DEFAULT_READ_TIMEOUT,
-            write_timeout=DEFAULT_WRITE_TIMEOUT):
+            write_timeout=DEFAULT_WRITE_TIMEOUT,
+            protocol_timeout=DEFAULT_PROTOCOL_TIMEOUT):
 
         super(AbstractSerialConnection, self).__init__()
 
-        self.read_timeout = read_timeout
-        self.write_timeout = write_timeout
-        self.comport = None
         self.settings = settings
+        """Serial settings as an instance of :class:`SerialSettings`."""
+
+        self.comport = None
+        """The gateway to the serial communications port, usually an
+        instance of ``serial.Serial`` from the **PySerial** library.
+        """
+
+        self.read_timeout = read_timeout
+
+        self.write_timeout = write_timeout
+
+        self.protocol_timeout = protocol_timeout
+
+        self.device_encoding = 'CP850'
+
+        self.hex_dump = True
 
 
     def __del__(self):
@@ -417,17 +415,38 @@ class AbstractSerialConnection(object):
                 self.comport.close()
 
 
-    def write(self, data):
-        """
-        Write data to serial port.
-        """
+    @property
+    def protocol_timeout(self):
+        return self._protocol_timeout
+
+
+    @protocol_timeout.setter
+    def protocol_timeout(self, value):
+        self._protocol_timeout = value
+        self._ptimeout = TimeoutHelper(timeout=self._protocol_timeout)
+
+
+    def is_clear_to_write(self):
         raise NotImplementedError()
 
 
+    def wait_to_write(self):
+        self._ptimeout.set()
+        while self._ptimeout.check():
+            if self.is_clear_to_write():
+                break
+
+
+    def write(self, data):
+        """Write data to serial port."""
+        for chunk in chunks(data, 512):
+            self.wait_to_write()
+            self.comport.write(chunk)
+        self.comport.flush()
+
+
     def read(self):
-        """
-        Read data from serial port. Returns a ``bytearray``.
-        """
+        """Read data from serial port and returns a ``bytearray``."""
         data = bytearray()
         while True:
             incoming_bytes = self.comport.inWaiting()
@@ -476,33 +495,17 @@ class AbstractSerialConnection(object):
 
 
 class RTSCTSConnection(AbstractSerialConnection):
-    """
-    Implements a RTS/CTS aware connection.
-    """
+    """Implements a RTS/CTS aware connection."""
 
-    protocol_timeout = 5
-
-    def __init__(self, settings,
-            read_timeout=DEFAULT_READ_TIMEOUT,
-            write_timeout=DEFAULT_WRITE_TIMEOUT,
-            protocol_timeout=DEFAULT_PROTOCOL_TIMEOUT):
-
-        super(RTSCTSConnection, self).__init__(settings,
-                read_timeout=read_timeout,
-                write_timeout=write_timeout)
-
-        self.protocol_timeout = protocol_timeout
+    def is_clear_to_write(self):
+        return self.comport.getCTS()
 
 
-    def write(self, data):
-        timeout = TimeoutHelper(timeout=self.protocol_timeout)
-        for chunk in chunks(data, 512):
-            timeout.set()
-            while timeout.check():
-                if self.comport.getCTS():
-                    break
-            self.comport.write(chunk)
-        self.comport.flush()
+class DSRDTRConnection(AbstractSerialConnection):
+    """Implements a DSR/DTR aware connection."""
+
+    def is_clear_to_write(self):
+        return self.comport.getDSR()
 
 
 class _SerialDumper(pyserial.Serial):
