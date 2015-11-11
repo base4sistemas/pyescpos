@@ -17,12 +17,11 @@
 
 import io
 import os
+import re
 import sys
 
 from setuptools import setup
 from setuptools.command.test import test as TestCommand
-
-import escpos
 
 
 def read(*filenames, **kwargs):
@@ -38,6 +37,12 @@ def read(*filenames, **kwargs):
 def read_install_requires():
     content = read('requirements.txt')
     return content.strip().split(os.linesep)
+
+
+def read_version():
+    content = read(os.path.join(
+            os.path.dirname(__file__), 'escpos', '__init__.py'))
+    return re.search(r"__version__ = '([^']+)'", content).group(1)
 
 
 long_description = read('README.rst')
@@ -63,7 +68,7 @@ class PyTest(TestCommand):
 
 setup(
         name='PyESCPOS',
-        version=escpos.__version__,
+        version=read_version(),
         description='Support for Epson ESC/POS printer command system.',
         long_description=long_description,
         packages=[
@@ -87,7 +92,7 @@ setup(
         author='Daniel Gonçalves',
         author_email='daniel@base4.com.br',
         classifiers = [
-                'Development Status :: 1 - Planning',
+                'Development Status :: 3 - Alpha',
                 'Environment :: Other Environment',
                 'Intended Audience :: Developers',
                 'Intended Audience :: Information Technology',
