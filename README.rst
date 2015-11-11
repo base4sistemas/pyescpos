@@ -53,6 +53,9 @@ Current implementation was tested against following hardwares:
 | `Epson`_                | TM-T20            | 1.14              |
 |                         |                   |                   |
 +-------------------------+-------------------+-------------------+
+| `Elgin`_                | Elgin i9          | CV1.03.20         |
+|                         |                   |                   |
++-------------------------+-------------------+-------------------+
 | `Urmet Daruma`_         | DR700 L/H/M and   | 02.51.00,         |
 |                         | DR700 L-e/H-e     | 01.20.00,         |
 |                         |                   | 01.21.00          |
@@ -179,5 +182,6 @@ It is important that you read this **disclaimer**.
 .. _`PyUSB`: http://walac.github.io/pyusb/
 .. _`PyBlueZ`: https://github.com/manuelnaranjo/PyBlueZ
 .. _`Epson`: http://www.epson.com/
+.. _`Elgin`: http://www.elgin.com.br/
 .. _`Urmet Daruma`: http://daruma.com.br/
 .. _`Bematech S/A`: http://www.bematechus.com/
