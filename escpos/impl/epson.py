@@ -22,6 +22,7 @@ import time
 
 from .. import barcode
 from .. import feature
+from ..exceptions import CashDrawerException
 from ..helpers import is_value_in
 
 
@@ -315,7 +316,8 @@ class GenericESCPOS(object):
         application perspective, drawers are simply connected to port 0, 1, 2,
         and so on.
 
-        If printer does not have this feature then nothing happens.
+        If printer does not have this feature then no exception should be
+        raised.
 
         :param int number: The port number to kick drawer (default is ``0``).
 

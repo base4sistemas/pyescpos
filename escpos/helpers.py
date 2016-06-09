@@ -20,13 +20,7 @@
 import itertools
 import time
 
-
-class TimeoutException(Exception):
-    pass
-
-
-class CashDrawerException(Exception):
-    pass
+from .exceptions import TimeoutException
 
 
 class TimeoutHelper(object):

@@ -31,7 +31,7 @@ import time
 
 from .. import barcode
 from .. import feature
-from ..helpers import CashDrawerException
+from ..exceptions import CashDrawerException
 from ..helpers import is_value_in
 from .epson import GenericESCPOS
 
@@ -157,9 +157,15 @@ class _ESCBematech(_CommandSet):
     def kick_drawer(self, port=0, **kwargs):
         # although concrete implementations may have any number of available
         # cash drawer ports, ESC/Bematech foresees two cash drawers anyways
-        if port not in xrange(2):
+        available_ports = self._impl.hardware_features.get(
+                feature.CASHDRAWER_AVAILABLE_PORTS)
+
+        if port not in xrange(available_ports):
+            ports_list = ', '.join(str(p) for p in xrange(available_ports))
             raise CashDrawerException('invalid cash drawer port: {!r} '
-                    '(ESC/Bematech foresees only ports 0 and 1)'.format(port))
+                    '(hardware features only ports: {})'.format(
+                            port,
+                            ports_list))
 
         duration = kwargs.get('duration', _CASHDRAWER_DEFAULT_DURATION)
         if duration not in xrange(
@@ -172,11 +178,15 @@ class _ESCBematech(_CommandSet):
 
         if port == 0:
             # activate cash drawer #1 (ESC 76h)
-            self.device.write('\x1B\x76' + chr(duration))
+            self._impl.device.write('\x1B\x76' + chr(duration))
 
         elif port == 1:
             # activate cash drawer #2 (ESC 80h)
-            self.device.write('\x1B\x80' + chr(duration))
+            self._impl.device.write('\x1B\x80' + chr(duration))
+
+        else:
+            raise CashDrawerException('invalid cash drawer port: {!r} '
+                    '(ESC/Bematech foresees only ports 0 and 1'.format(port))
 
 
 class MP4200TH(GenericESCPOS):

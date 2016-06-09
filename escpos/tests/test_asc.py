@@ -19,7 +19,8 @@
 
 import pytest
 
-from .. import asc
+from escpos import asc
+
 
 def test_mnemonic():
     assert asc.mnemonic(-1) is None, 'There is no mnemonic for ASCII code -1'
@@ -32,9 +33,6 @@ def test_ascii_code_from_mnemonic():
     assert asc.value('ESC') == 27, 'Mnemonic "ESC" should be ASCII code 27'
     assert asc.value('Esc') == 27, 'Mnemonic "Esc" should be ASCII code 27'
     assert asc.value('esc') == 27, 'Mnemonic "esc" should be ASCII code 27'
-    
+
     with pytest.raises(ValueError):
         asc.value('NOP')
-
-
-
