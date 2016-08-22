@@ -463,10 +463,14 @@ class AbstractSerialConnection(object):
             if self.comport.isOpen():
                 self.comport.close()
 
-        _impl = _SerialDumper if self.hex_dump else pyserial.Serial
+        factory = _SerialDumper if self.hex_dump else pyserial.Serial
+        port = self.settings.port
 
-        self.comport = _impl(
-                port=self.settings.port,
+        if port is None:
+            port = self.settings.portname
+
+        self.comport = factory(
+                port=port,
                 baudrate=self.settings.baudrate,
                 bytesize=self.settings.databits,
                 stopbits=self.settings.stopbits,
@@ -476,6 +480,9 @@ class AbstractSerialConnection(object):
                 xonxoff=self.settings.is_xonxoff(),
                 timeout=self.read_timeout,
                 writeTimeout=self.write_timeout)
+
+        if not self.comport.isOpen():
+            self.comport.open()
 
         self.comport.setRTS(level=1)
         self.comport.setDTR(level=1)
