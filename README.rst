@@ -2,11 +2,11 @@
 PyESCPOS
 ========
 
-.. image:: https://img.shields.io/badge/status-planning-red.svg
+.. image:: https://img.shields.io/pypi/status/pyescpos.svg
     :target: https://pypi.python.org/pypi/pyescpos/
     :alt: Development status
 
-.. image:: https://img.shields.io/badge/python%20version-2.7-blue.svg
+.. image:: https://img.shields.io/pypi/pyversions/pyescpos.svg
     :target: https://pypi.python.org/pypi/pyescpos/
     :alt: Supported Python versions
 
