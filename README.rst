@@ -88,11 +88,19 @@ Serial communications support requires `PySerial`_ version 2.7 or later.
 USB Example
 -----------
 
-USB support requires `PyUSB`_.
+USB support requires `PyUSB`_. Just a reminder: if your printer has more than
+one interface (eg. USB and serial), you may have to configure which interface
+is active.
 
 .. sourcecode:: python
 
-    # TODO: USB support example.
+    from escpos.ifusb import USBConnection
+    from escpos.impl.zjiang import ModelZJ5802LD
+
+    conn = USBConnection.create('0493:8760,interface=0,ep_out=3,ep_in=0')
+    printer = ModelZJ5802LD(conn)
+    printer.init()
+    printer.text('Hello World!')
 
 
 Bluetooth Example
