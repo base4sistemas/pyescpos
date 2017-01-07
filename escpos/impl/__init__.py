@@ -17,5 +17,5 @@
 # limitations under the License.
 #
 
-import epson
-import daruma
+from . import epson
+from . import daruma
