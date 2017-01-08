@@ -87,7 +87,8 @@ class GenericESCPOS(object):
         """
         Line feed. Issues a line feed to printer *n*-times.
         """
-        for i in xrange(lines):
+        #for i in xrange(lines):
+        for i in range(lines):
             self.device.write('\x0A')
 
 
@@ -285,6 +286,12 @@ class GenericESCPOS(object):
         """
         Trigger cutter to perform partial (default) or full paper cut.
         """
+
+        # Norberto Hideaki Enomoto -> Python 3.4
+
+        param = '\x01' if partial else '\x00'
+        self.device.write('\x1D\x56' + param)
+
         if self.hardware_features.get(feature.CUTTER, False):
             # TODO: implement hardware alternative for unavailable features
             # For example:
