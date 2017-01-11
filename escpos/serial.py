@@ -60,7 +60,6 @@ def scan_ports():
 
     """
     names = []
-    #for number in xrange(256):
     for number in range(256):
         try:
             # attempt attr `name` for PySerial >= 2.5-rc2,
@@ -336,7 +335,6 @@ class SerialSettings(object):
                 port_number = self._port
                 port_name = get_port_name(port_number)
             elif isinstance(self._port, string_types):
-            #elif isinstance(self._port, basestring):
                 port_name = self._port
                 port_number = get_port_number(port_name)
             else:

@@ -17,8 +17,9 @@
 # limitations under the License.
 #
 
-import itertools
 import time
+
+from six.moves import zip_longest
 
 from .exceptions import TimeoutException
 
@@ -44,10 +45,7 @@ class TimeoutHelper(object):
 def chunks(iterable, size):
     def chunk_factory(iterable, size):
         args = [iter(iterable)] * size
-
-        # Norberto Hideaki Enomoto -> Python 3.4
-        #return itertools.izip_longest(*args, fillvalue=None)
-        return itertools.zip_longest(*args, fillvalue=None)
+        return zip_longest(*args, fillvalue=None)
     for chunk in chunk_factory(iterable, size):
         yield ''.join([e for e in chunk if e is not None])
     raise StopIteration()
@@ -63,8 +61,7 @@ def hexdump(data):
     hexpanel = [' '.join(line) for line in _cut(_hex(raw_data), 16)]
     chrpanel = [''.join(line) for line in _cut(_chr(raw_data), 16)]
     hexpanel[-1] = hexpanel[-1] + (chr(32) * (47 - len(hexpanel[-1])))
-    # Norberto Hideaki Enomoto -> error no Django
-    #chrpanel[-1] = chrpanel[-1] + (chr(32) * (16 - len(chrpanel[-1])))
+    chrpanel[-1] = chrpanel[-1] + (chr(32) * (16 - len(chrpanel[-1])))
     return '\n'.join('%s  %s' % (h, c) for h, c in zip(hexpanel, chrpanel))
 
 

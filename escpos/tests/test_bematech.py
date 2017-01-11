@@ -97,7 +97,7 @@ def test_qrcode(printer):
     # if you want more details.
     data = 'http://www.example.com'
     size_L = len(data) % 255
-    size_H = len(data) / 255
+    size_H = len(data) // 255
 
     printer.qrcode(data)
     assert printer.device.write_buffer == ''.join([

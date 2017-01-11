@@ -25,6 +25,8 @@
     specific values.
 """
 
+from six.moves import range
+
 from .helpers import is_value_in
 
 
@@ -158,7 +160,7 @@ See http://www.qrcode.com/en/howto/cell.html.
 
 _BARCODE_ARGS = {
         'barcode_height':
-                lambda v: v in xrange(1, 256),
+                lambda v: v in range(1, 256),
 
         'barcode_width':
                 lambda v: is_value_in(BARCODE_WIDTHS, v),

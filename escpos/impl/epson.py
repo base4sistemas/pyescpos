@@ -20,6 +20,8 @@
 import re
 import time
 
+from six.moves import range
+
 from .. import barcode
 from .. import feature
 from ..exceptions import CashDrawerException
@@ -87,7 +89,6 @@ class GenericESCPOS(object):
         """
         Line feed. Issues a line feed to printer *n*-times.
         """
-        #for i in xrange(lines):
         for i in range(lines):
             self.device.write('\x0A')
 
@@ -235,7 +236,7 @@ class GenericESCPOS(object):
         # compute HI,LO bytes for the number of bytes (parameters) after `pH`;
         # this is possibly the safest way, but alternatives are:
         #
-        #     size_H = num_bytes / 256
+        #     size_H = num_bytes // 256 # (!) integer division (rounding down)
         #     size_L = num_bytes % 256
         #
         # or:
@@ -286,12 +287,6 @@ class GenericESCPOS(object):
         """
         Trigger cutter to perform partial (default) or full paper cut.
         """
-
-        # Norberto Hideaki Enomoto -> Python 3.4
-
-        param = '\x01' if partial else '\x00'
-        self.device.write('\x1D\x56' + param)
-
         if self.hardware_features.get(feature.CUTTER, False):
             # TODO: implement hardware alternative for unavailable features
             # For example:
@@ -335,7 +330,7 @@ class GenericESCPOS(object):
             max_ports = self.hardware_features.get(
                     feature.CASHDRAWER_AVAILABLE_PORTS, 1)
 
-            if port not in xrange(max_ports):
+            if port not in range(max_ports):
                 raise CashDrawerException('invalid cash drawer port: {!r} '
                         '(available ports are {!r})'.format(
                                 port, range(max_ports)))
@@ -344,7 +339,7 @@ class GenericESCPOS(object):
 
 
     def _kick_drawer_impl(self, port=0, **kwargs):
-        if port not in xrange(2):
+        if port not in range(2):
             raise CashDrawerException(
                     'invalid cash drawer port: {!r}'.format(port))
 

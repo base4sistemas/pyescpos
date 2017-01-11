@@ -29,6 +29,8 @@
 import re
 import time
 
+from six.moves import range
+
 from .. import barcode
 from .. import feature
 from ..exceptions import CashDrawerException
@@ -137,7 +139,7 @@ class _ESCBematech(_CommandSet):
         _unknown_param_4 = 1
 
         size_L = len(data) % 255
-        size_H = len(data) / 255
+        size_H = len(data) // 255
 
         command = '\x1D\x6B\x51' + \
                 chr(_unknown_param_1) + \
@@ -160,15 +162,15 @@ class _ESCBematech(_CommandSet):
         available_ports = self._impl.hardware_features.get(
                 feature.CASHDRAWER_AVAILABLE_PORTS)
 
-        if port not in xrange(available_ports):
-            ports_list = ', '.join(str(p) for p in xrange(available_ports))
+        if port not in range(available_ports):
+            ports_list = ', '.join(str(p) for p in range(available_ports))
             raise CashDrawerException('invalid cash drawer port: {!r} '
                     '(hardware features only ports: {})'.format(
                             port,
                             ports_list))
 
         duration = kwargs.get('duration', _CASHDRAWER_DEFAULT_DURATION)
-        if duration not in xrange(
+        if duration not in range(
                 _CASHDRAWER_DURATION_MIN, _CASHDRAWER_DURATION_MAX + 1):
             raise ValueError('illegal cash drawer activation duration: {!r} '
                     '(in milliseconds, ranging from {!r} up to {!r}'.format(
