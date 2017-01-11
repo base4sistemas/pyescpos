@@ -17,8 +17,9 @@
 # limitations under the License.
 #
 
-import itertools
 import time
+
+from six.moves import zip_longest
 
 from .exceptions import TimeoutException
 
@@ -44,7 +45,7 @@ class TimeoutHelper(object):
 def chunks(iterable, size):
     def chunk_factory(iterable, size):
         args = [iter(iterable)] * size
-        return itertools.izip_longest(*args, fillvalue=None)
+        return zip_longest(*args, fillvalue=None)
     for chunk in chunk_factory(iterable, size):
         yield ''.join([e for e in chunk if e is not None])
     raise StopIteration()
@@ -52,7 +53,7 @@ def chunks(iterable, size):
 
 def hexdump(data):
     def _cut(sequence, size):
-        for i in xrange(0, len(sequence), size):
+        for i in range(0, len(sequence), size):
             yield sequence[i:i+size]
     _hex = lambda seq: ['{0:02x}'.format(b) for b in seq]
     _chr = lambda seq: [chr(b) if 32 <= b <= 126 else '.' for b in seq]
