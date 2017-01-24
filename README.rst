@@ -88,31 +88,6 @@ Serial communications support requires `PySerial`_ version 2.7 or later.
     printer.text('Hello World!')
 
 
-USB Example
------------
-
-USB support requires `PyUSB`_.
-
-.. sourcecode:: python
-
-    # TODO: USB support example.
-
-
-Bluetooth Example
------------------
-
-Bluetooth support requires `PyBlueZ`_ (*not yet implemented*).
-
-.. sourcecode:: python
-
-    from escpos.bluetooth import BluetoothConnection
-    from escpos.impl.epson import GenericESCPOS
-
-    printer = GenericESCPOS(BluetoothConnection('01:0a:02:0b:03:0c'))
-    printer.init()
-    printer.text('Hello World!')
-
-
 Printing Barcodes
 -----------------
 
@@ -182,8 +157,6 @@ It is important that you read this **disclaimer**.
 .. _`Epson ESCPOS FAQ`: http://content.epson.de/fileadmin/content/files/RSD/downloads/escpos.pdf
 .. _`python-escpos`: https://github.com/manpaz/python-escpos
 .. _`PySerial`: http://pyserial.sourceforge.net/
-.. _`PyUSB`: http://walac.github.io/pyusb/
-.. _`PyBlueZ`: https://github.com/manuelnaranjo/PyBlueZ
 .. _`Epson`: http://www.epson.com/
 .. _`Elgin`: http://www.elgin.com.br/
 .. _`Urmet Daruma`: http://daruma.com.br/
