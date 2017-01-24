@@ -79,3 +79,14 @@ class ElginI9(ElginGeneric):
         t2 = kwargs.get('t2', None) or chr(ord(t1) + duration)
 
         self.device.write('\x1B\x70' + pin + t1 + t2)
+
+
+class ElginI7(ElginI9):
+    """
+    Implementation for Elgin i7 thermal mini-printer.
+    """
+
+    def __init__(self, device, features={}):
+        super(ElginI7, self).__init__(device)
+        self.hardware_features.update({feature.CUTTER: False})
+        self.hardware_features.update(features)

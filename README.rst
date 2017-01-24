@@ -56,6 +56,9 @@ Current implementation was tested against following hardwares:
 | `Elgin`_                | Elgin i9          | CV1.03.20         |
 |                         |                   |                   |
 +-------------------------+-------------------+-------------------+
+| `Elgin`_                | Elgin i7          | CV1.00.08         |
+|                         |                   |                   |
++-------------------------+-------------------+-------------------+
 | `Urmet Daruma`_         | DR700 L/H/M and   | 02.51.00,         |
 |                         | DR700 L-e/H-e     | 01.20.00,         |
 |                         |                   | 01.21.00          |
