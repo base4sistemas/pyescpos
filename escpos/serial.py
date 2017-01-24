@@ -382,14 +382,14 @@ class SerialSettings(object):
         return SerialSettings(**kwargs)
 
 
-class AbstractSerialConnection(object):
+class SerialConnection(object):
 
     def __init__(self, settings,
             read_timeout=DEFAULT_READ_TIMEOUT,
             write_timeout=DEFAULT_WRITE_TIMEOUT,
             protocol_timeout=DEFAULT_PROTOCOL_TIMEOUT):
 
-        super(AbstractSerialConnection, self).__init__()
+        super(SerialConnection, self).__init__()
 
         self.settings = settings
         """Serial settings as an instance of :class:`SerialSettings`."""
@@ -502,14 +502,31 @@ class AbstractSerialConnection(object):
                 errors=errors)
 
 
-class RTSCTSConnection(AbstractSerialConnection):
+    @staticmethod
+    def create(settings_string):
+        """
+        Creates a serial RS232 connection based on a settings string. Calling
+        this method is a shortcut for:
+
+        .. sourcecode:: python
+
+            settings = SerialSettings.as_from('/dev/ttyS0:9200,8,1,N,RTSCTS')
+            conn = settings.get_connection()
+
+        See method :meth:`~escpos.serial.SerialSettings.as_from` for details.
+        """
+        settings = SerialSettings.as_from(settings_string)
+        return settings.get_connection()
+
+
+class RTSCTSConnection(SerialConnection):
     """Implements a RTS/CTS aware connection."""
 
     def is_clear_to_write(self):
         return self.comport.getCTS()
 
 
-class DSRDTRConnection(AbstractSerialConnection):
+class DSRDTRConnection(SerialConnection):
     """Implements a DSR/DTR aware connection."""
 
     def is_clear_to_write(self):

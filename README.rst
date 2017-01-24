@@ -78,11 +78,11 @@ Serial communications support requires `PySerial`_ version 2.7 or later.
 
 .. sourcecode:: python
 
-    from escpos.serial import SerialSettings
+    from escpos.serial import SerialConnection
     from escpos.impl.epson import GenericESCPOS
 
     # assumes RTS/CTS for 'ttyS5' and infers an instance of RTSCTSConnection
-    conn = SerialSettings.as_from('/dev/ttyS5:9600,8,1,N').get_connection()
+    conn = SerialConnection.create('/dev/ttyS5:9600,8,1,N')
     printer = GenericESCPOS(conn)
     printer.init()
     printer.text('Hello World!')
@@ -98,10 +98,10 @@ barcode as you asked.
 .. sourcecode:: python
 
     from escpos import barcode
-    from escpos.serial import SerialSettings
+    from escpos.serial import SerialConnection
     from escpos.impl.epson import GenericESCPOS
 
-    conn = SerialSettings.as_from('COM1:9600:8:1:N').get_connection()
+    conn = SerialConnection.create('COM1:9600,8,1,N')
     printer = GenericESCPOS(conn)
     printer.init()
     printer.code128('0123456789',
