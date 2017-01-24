@@ -33,13 +33,11 @@ from six.moves import range
 
 from .. import barcode
 from .. import feature
+from ..constants import CASHDRAWER_DEFAULT_DURATION
 from ..exceptions import CashDrawerException
 from ..helpers import is_value_in
 from .epson import GenericESCPOS
 
-
-_CASHDRAWER_DEFAULT_DURATION = 200
-"""Duration for cash drawer activation (kick) in milliseconds."""
 
 _CASHDRAWER_DURATION_MIN = 50
 _CASHDRAWER_DURATION_MAX = 250
@@ -169,7 +167,7 @@ class _ESCBematech(_CommandSet):
                             port,
                             ports_list))
 
-        duration = kwargs.get('duration', _CASHDRAWER_DEFAULT_DURATION)
+        duration = kwargs.get('duration', CASHDRAWER_DEFAULT_DURATION)
         if duration not in range(
                 _CASHDRAWER_DURATION_MIN, _CASHDRAWER_DURATION_MAX + 1):
             raise ValueError('illegal cash drawer activation duration: {!r} '

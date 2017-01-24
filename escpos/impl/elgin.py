@@ -23,6 +23,7 @@
 
 from .. import barcode
 from .. import feature
+from ..constants import CASHDRAWER_DEFAULT_DURATION
 from .epson import GenericESCPOS
 
 
@@ -64,3 +65,17 @@ class ElginI9(ElginGeneric):
         param = '\x01' if flag else '\x00'
         self.device.write('\x1B\x4D' + param)
 
+
+    def _kick_drawer_impl(self, port=0, **kwargs):
+        # param 'm' 0x00 or 0x30 (0, 48) for pin 2
+        # param 'm' 0x01 or 0x31 (1, 49) for pin 5
+        pin = '\x00' if port == 0 else '\x01'
+
+        # pulse duration (0 <= duration <= 255)
+        # [1] although the manual says that t1 and t2 should lie in between 0
+        # and 255, if t1 is a very low value the drawer may not be kicked!
+        duration = kwargs.get('duration', CASHDRAWER_DEFAULT_DURATION)
+        t1 = kwargs.get('t1', '\x20') # 32ms (t1 should be less than t2) [1]
+        t2 = kwargs.get('t2', None) or chr(ord(t1) + duration)
+
+        self.device.write('\x1B\x70' + pin + t1 + t2)
