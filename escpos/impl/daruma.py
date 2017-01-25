@@ -26,7 +26,11 @@ import time
 from .. import asc
 from .. import barcode
 from .. import feature
+from ..helpers import _Model
 from .epson import GenericESCPOS
+
+
+_VENDOR = u'Urmet Daruma'
 
 
 _QRCODE_MAX_DATA_SIZE = 700
@@ -43,6 +47,9 @@ class DarumaGeneric(GenericESCPOS):
     """
     Base implementation for Urmet Daruma ESC/POS mini-printers.
     """
+
+    model = _Model(name=u'Generic Daruma', vendor=_VENDOR)
+
 
     def __init__(self, device, features={}):
         super(DarumaGeneric, self).__init__(device)
@@ -153,7 +160,8 @@ class DR700(DarumaGeneric):
     Urmet Daruma DR700 thermal printer implementation.
     Support models DR700 L/H/M and DR700 L-e/H-e.
     """
-    pass
+
+    model = _Model(name=u'Daruma DR700', vendor=_VENDOR)
 
 
 def _translate_barcode_height(value):

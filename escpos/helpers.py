@@ -19,9 +19,14 @@
 
 import time
 
+from collections import namedtuple
+
 from six.moves import zip_longest
 
 from .exceptions import TimeoutException
+
+
+_Model = namedtuple('_Model', 'name vendor')
 
 
 class TimeoutHelper(object):

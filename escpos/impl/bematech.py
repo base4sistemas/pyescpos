@@ -36,7 +36,11 @@ from .. import feature
 from ..constants import CASHDRAWER_DEFAULT_DURATION
 from ..exceptions import CashDrawerException
 from ..helpers import is_value_in
+from ..helpers import _Model
 from .epson import GenericESCPOS
+
+
+_VENDOR = u'Bematech S/A'
 
 
 _CASHDRAWER_DURATION_MIN = 50
@@ -195,6 +199,9 @@ class MP4200TH(GenericESCPOS):
     command set, ESC/POS and ESC/Bematech, with automatic switching between
     command sets depending on the operation that needs to be performed.
     """
+
+    model = _Model(name=u'Bematech MP-4200 TH', vendor=_VENDOR)
+
 
     def __init__(self, device, features={}):
         super(MP4200TH, self).__init__(device)

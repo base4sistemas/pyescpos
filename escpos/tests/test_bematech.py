@@ -35,6 +35,10 @@ def printer():
     return MP4200TH(pytest.FakeDevice())
 
 
+def test_has_model_attr(printer):
+    assert hasattr(printer, 'model')
+
+
 def test_init(printer):
     printer.init() # inherited from `escpos.impl.epson.GenericESCPOS`
     assert printer.device.write_buffer == '\x1B\x40'

@@ -24,13 +24,20 @@
 from .. import barcode
 from .. import feature
 from ..constants import CASHDRAWER_DEFAULT_DURATION
+from ..helpers import _Model
 from .epson import GenericESCPOS
+
+
+_VENDOR = u'Elgin S/A'
 
 
 class ElginGeneric(GenericESCPOS):
     """
     Base implementation for Elgin ESC/POS mini-printers.
     """
+
+    model = _Model(name=u'Generic Elgin', vendor=_VENDOR)
+
 
     def __init__(self, device, features={}):
         super(ElginGeneric, self).__init__(device)
@@ -47,6 +54,9 @@ class ElginI9(ElginGeneric):
     """
     Implementation for Elgin i9 thermal mini-printer.
     """
+
+    model = _Model(name=u'Elgin I9', vendor=_VENDOR)
+
 
     def __init__(self, device, features={}):
         super(ElginI9, self).__init__(device)
@@ -85,6 +95,9 @@ class ElginI7(ElginI9):
     """
     Implementation for Elgin i7 thermal mini-printer.
     """
+
+    model = _Model(name=u'Elgin I7', vendor=_VENDOR)
+
 
     def __init__(self, device, features={}):
         super(ElginI7, self).__init__(device)

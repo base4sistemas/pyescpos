@@ -28,6 +28,10 @@ def printer():
     return ElginI9(pytest.FakeDevice())
 
 
+def test_has_model_attr(printer):
+    assert hasattr(printer, 'model')
+
+
 def test_kick_drawer(printer):
     printer.kick_drawer()
     assert printer.device.write_buffer == '\x1B\x70\x00\x20\xe8'

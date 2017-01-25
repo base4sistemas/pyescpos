@@ -26,6 +26,10 @@ from .. import barcode
 from .. import feature
 from ..exceptions import CashDrawerException
 from ..helpers import is_value_in
+from ..helpers import _Model
+
+
+_VENDOR = u'Seiko-Epson Corporation'
 
 
 QRCODE_ERROR_CORRECTION_MAP = {
@@ -72,6 +76,10 @@ class GenericESCPOS(object):
     A mapping of hardware features.
     """
 
+    model = _Model(name=u'Generic ESC/POS', vendor=_VENDOR)
+    """
+    Basic metadata with vendor and model name.
+    """
 
     def __init__(self, device, features={}):
         super(GenericESCPOS, self).__init__()
@@ -228,9 +236,6 @@ class GenericESCPOS(object):
         return self._qrcode_impl(data, **kwargs)
 
 
-
-
-
     def _qrcode_impl(self, data, **kwargs):
         num_bytes = 3 + len(data) # number of bytes after `pH`
         # compute HI,LO bytes for the number of bytes (parameters) after `pH`;
@@ -349,6 +354,9 @@ class GenericESCPOS(object):
 
 class TMT20(GenericESCPOS):
     """Epson TM-T20 thermal printer."""
+
+    model = _Model(name=u'Epson TM-T20', vendor=_VENDOR)
+
 
     def __init__(self, device, features={}):
         super(TMT20, self).__init__(device)
