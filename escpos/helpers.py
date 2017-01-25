@@ -17,9 +17,11 @@
 # limitations under the License.
 #
 
+import inspect
 import time
 
 from collections import namedtuple
+from operator import attrgetter
 
 from six.moves import zip_longest
 
@@ -27,6 +29,33 @@ from .exceptions import TimeoutException
 
 
 _Model = namedtuple('_Model', 'name vendor')
+
+Implementation = namedtuple('Implementation', 'model type fqname')
+
+
+def find_implementations(sort_by=None):
+    """
+    Returns a tuple of :class:`~escpos.helpers.Implementation` objects
+    containing metadata for all known implementations (subclasses of
+    :class:`~escpos.impl.epson.GenericESCPOS`) with vendor and model names, the
+    implementation type and its fully qualified name.
+
+    This example will print all vendor and model names, sorted by vendor name:
+
+    .. sourcecode::
+
+        for impl in find_implementations(sort_by='model.vendor'):
+            print impl.model.vendor, ':', impl.model.name
+
+    :param str sort_by: Attribute name to sort the resulting list (optional).
+
+    :rtype: tuple
+
+    """
+    impls = [_describe_impl(t) for t in _list_impls()]
+    if sort_by:
+        impls.sort(key=attrgetter(sort_by))
+    return tuple(impls)
 
 
 class TimeoutHelper(object):
@@ -79,3 +108,28 @@ def is_value_in(constants_group, value):
         if const_value == value:
             return True
     return False
+
+
+def _list_impls():
+    from escpos.impl.epson import GenericESCPOS
+    return _impls_for(GenericESCPOS)
+
+
+def _impls_for(t):
+    impls = [t,]
+    for subcls in t.__subclasses__():
+        impls.extend(_impls_for(subcls))
+    return impls
+
+
+def _describe_impl(t):
+    impl = Implementation(
+            model=_Model(name=t.model.name, vendor=t.model.vendor),
+            type=t,
+            fqname=_fqname(t))
+    return impl
+
+
+def _fqname(t):
+    m = inspect.getmodule(t)
+    return '.'.join([m.__name__, t.__name__])

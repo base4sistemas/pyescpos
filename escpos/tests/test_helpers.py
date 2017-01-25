@@ -25,6 +25,7 @@ import pytest
 from escpos.exceptions import TimeoutException
 from escpos.helpers import chunks
 from escpos.helpers import TimeoutHelper
+from escpos.helpers import find_implementations
 
 
 def test_chunk():
@@ -41,3 +42,22 @@ def test_timeout():
     with pytest.raises(TimeoutException):
         time.sleep(1)
         timeout.check()
+
+
+def test_find_implementations():
+    impls = find_implementations()
+    assert isinstance(impls, tuple)
+    assert len(impls) >= 1
+
+    expected_fqname = 'escpos.impl.epson.GenericESCPOS'
+
+    for impl in impls:
+        if impl.fqname == expected_fqname:
+            instance = impl.type(pytest.FakeDevice())
+            assert instance.model.name == impl.model.name
+            assert instance.model.vendor == impl.model.vendor
+            break
+    else:
+        found_fqnames = [i.fqname for i in impls]
+        raise RuntimeError('Cannot find expected FQ name {!r}; found FQ names: '
+                '{!r}'.format(expected_fqname, found_fqnames))
