@@ -38,14 +38,13 @@ This project aims to make viable the use, at the *point-of-sale* (POS), of
 different printers (the most common ones, at least) that are minimally based on
 ESC/POS |reg| standard, without need to modify the client application code. To
 achieve this, it is necessary to draw a lowest common denominator between
-features and provide implementations that seek to meet this minimum. At this
-stage of the project, "minimum" is still a fuzzy word.
+features and provide implementations that seek to meet this minimum.
 
 
 Tested Hardware
 ===============
 
-Current implementation was tested against following hardwares:
+Current implementation was tested against following hardware:
 
 +-------------------------+-------------------+-------------------+
 | Manufacturer            | Models            | Firmware Versions |
@@ -88,6 +87,22 @@ Serial communications support requires `PySerial`_ version 2.7 or later.
     printer.text('Hello World!')
 
 
+Network TCP/IP Example
+----------------------
+
+You can connect to your printer through network TCP/IP interface.
+
+.. sourcecode:: python
+
+    from escpos.network import NetworkConnection
+    from escpos.impl.epson import GenericESCPOS
+
+    conn = NetworkConnection.create('10.0.0.101:9100')
+    printer = GenericESCPOS(conn)
+    printer.init()
+    printer.text('Hello World!')
+
+
 Printing Barcodes
 -----------------
 
@@ -120,8 +135,8 @@ barcode as you asked.
 
 
 The barcode data should be complete, that is, an EAN-13 barcode is formed from
-twelve digits plus check-digit. Most of the ESC/POS commands implementations
-requires only twelve digits and automaticaly calculate the check-digit.
+twelve digits plus check-digit. Most of the ESC/POS command implementations
+require only twelve digits and automaticaly calculate the check-digit.
 If you are dealing with, say, EAN-13 codes without the thirteenth-digit (the
 check-digit) just append zero (``0``) to the barcode class (or method) argument,
 so they can pass RE validation.
