@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/impl/__init__.py
+# escpos/impl/nitere.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #
@@ -17,17 +17,18 @@
 # limitations under the License.
 #
 
-from . import bematech
-from . import daruma
-from . import elgin
-from . import epson
-from . import nitere
-from . import unknown
+from ..helpers import _Model
+from .unknown import CB55C
 
-__all__ = [
-        'bematech',
-        'daruma',
-        'elgin',
-        'epson',
-        'nitere',
-        'unknown',]
+
+_VENDOR = u'Nitere'
+
+
+class NitereNPDV1020(CB55C):
+    """Alias for **Unknown OEM** :class:`~escpos.impl.unknown.CB55C` model."""
+
+    model = _Model(name=u'Nitere NPDV-1020', vendor=_VENDOR)
+
+
+    def __init__(self, device, features={}):
+        super(NitereNPDV1020, self).__init__(device, features=features)

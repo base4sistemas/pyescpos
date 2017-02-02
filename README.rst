@@ -41,34 +41,62 @@ achieve this, it is necessary to draw a lowest common denominator between
 features and provide implementations that seek to meet this minimum.
 
 
-Tested Hardware
-===============
+Current Implementations
+=======================
 
-Current implementation was tested against following hardware:
+Current implementations was tested against following hardware:
 
-+-------------------------+-------------------+-------------------+
-| Manufacturer            | Models            | Firmware Versions |
-+=========================+===================+===================+
-| `Epson`_                | TM-T20            | 1.14              |
-|                         |                   |                   |
-+-------------------------+-------------------+-------------------+
-| `Elgin`_                | Elgin i9          | CV1.03.20         |
-|                         |                   |                   |
-+-------------------------+-------------------+-------------------+
-| `Elgin`_                | Elgin i7          | CV1.00.08         |
-|                         |                   |                   |
-+-------------------------+-------------------+-------------------+
-| `Urmet Daruma`_         | DR700 L/H/M and   | 02.51.00,         |
-|                         | DR700 L-e/H-e     | 01.20.00,         |
-|                         |                   | 01.21.00          |
-+-------------------------+-------------------+-------------------+
-| `Bematech S/A`_         | MP-4200 TH        | 1.3, 1.6          |
-|                         |                   |                   |
-+-------------------------+-------------------+-------------------+
++-------------------------+-------------------+-------------------+-----------------------------------------+
+| Manufacturer            | Models            | Firmware Versions | Notes                                   |
++=========================+===================+===================+=========================================+
+| `Bematech S/A`_         | MP-4200 TH        | 1.3, 1.6          |                                         |
+|                         |                   |                   |                                         |
++-------------------------+-------------------+-------------------+-----------------------------------------+
+| `Epson`_                | TM-T20            | 1.14              |                                         |
+|                         |                   |                   |                                         |
++-------------------------+-------------------+-------------------+-----------------------------------------+
+| `Elgin`_                | Elgin i9          | CV1.03.20         |                                         |
+|                         |                   |                   |                                         |
++-------------------------+-------------------+-------------------+-----------------------------------------+
+| `Elgin`_                | Elgin i7          | CV1.00.08         |                                         |
+|                         |                   |                   |                                         |
++-------------------------+-------------------+-------------------+-----------------------------------------+
+| `Nitere`_               | NPDV-1020         | -                 | Multifunction Terminal model TMF-101/IG |
+|                         |                   |                   | (an alias for CB55-C model)             |
++-------------------------+-------------------+-------------------+-----------------------------------------+
+| Unknown OEM             | CB55-C            | 1.3.5             | Embedded in `Nitere`_ NPDV-1020 (model  |
+|                         |                   |                   | TMF-101/IG)                             |
++-------------------------+-------------------+-------------------+-----------------------------------------+
+| `Urmet Daruma`_         | DR700 L/H/M and   | 02.51.00,         |                                         |
+|                         | DR700 L-e/H-e     | 01.20.00,         |                                         |
+|                         |                   | 01.21.00          |                                         |
++-------------------------+-------------------+-------------------+-----------------------------------------+
+
+You can get a list of all available implementations with the following snippet:
+
+.. sourcecode:: python
+
+    from escpos import helpers
+
+    for impl in helpers.find_implementations(sort_by='model.name'):
+        print('{:.<25} {}'.format(impl.model.name, impl.fqname))
+
+Which produces an output similar to::
+
+    Bematech MP-4200 TH...... escpos.impl.bematech.MP4200TH
+    CB55-C................... escpos.impl.unknown.CB55C
+    Daruma DR700............. escpos.impl.daruma.DR700
+    Elgin I7................. escpos.impl.elgin.ElginI7
+    Elgin I9................. escpos.impl.elgin.ElginI9
+    Epson TM-T20............. escpos.impl.epson.TMT20
+    Generic Daruma........... escpos.impl.daruma.DarumaGeneric
+    Generic ESC/POS.......... escpos.impl.epson.GenericESCPOS
+    Generic Elgin............ escpos.impl.elgin.ElginGeneric
+    Nitere NPDV-1020......... escpos.impl.nitere.NitereNPDV1020
 
 
-Example Usage
-=============
+Usage Examples
+==============
 
 Serial RS232 Example
 --------------------
@@ -148,14 +176,19 @@ so they can pass RE validation.
     printer.ean13('4007817525070')  # is OK and prints 4007817525074 as expected
 
 
+More Examples
+-------------
+
+Eventually you may find more examples in the `PyESCPOS wiki`_ pages.
+
+
 Disclaimer
 ==========
 
 It is important that you read this **disclaimer**.
 
-    None of the vendors or manufacturers cited in this entire project
-    agree or endorse any of the patterns or implementations used. its
-    names are used only where it makes sense and/or to maintain context.
+    None of the vendors cited in this project agree or endorse any of the
+    patterns or implementations. Its names are used only to maintain context.
 
 ..
     Sphinx Documentation: Substitutions at
@@ -169,10 +202,12 @@ It is important that you read this **disclaimer**.
 .. |reg|  unicode:: U+00AE .. REGISTERED SIGN
     :ltrim:
 
+.. _`PyESCPOS wiki`: https://github.com/base4sistemas/pyescpos/wiki
 .. _`Epson ESCPOS FAQ`: http://content.epson.de/fileadmin/content/files/RSD/downloads/escpos.pdf
 .. _`python-escpos`: https://github.com/manpaz/python-escpos
 .. _`PySerial`: http://pyserial.sourceforge.net/
 .. _`Epson`: http://www.epson.com/
 .. _`Elgin`: http://www.elgin.com.br/
-.. _`Urmet Daruma`: http://daruma.com.br/
+.. _`Nitere`: http://www.nitere.com.br/
 .. _`Bematech S/A`: http://www.bematechus.com/
+.. _`Urmet Daruma`: http://daruma.com.br/
