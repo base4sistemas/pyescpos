@@ -35,13 +35,12 @@ def read(*filenames, **kwargs):
 
 
 def read_install_requires():
-    content = read('requirements.txt')
+    content = read(os.path.join('requirements', 'base.txt'))
     return content.strip().split(os.linesep)
 
 
 def read_version():
-    content = read(os.path.join(
-            os.path.dirname(__file__), 'escpos', '__init__.py'))
+    content = read(os.path.join('escpos', '__init__.py'))
     return re.search(r"__version__ = '([^']+)'", content).group(1)
 
 
@@ -76,15 +75,11 @@ setup(
                 'escpos.impl'
             ],
         install_requires=read_install_requires(),
-        extras_require={
-                'testing': [
-                        'pytest',
-                        'pytest-cov',
-                    ],
-            },
-        tests_require=['pytest'],
+        tests_require=[
+                'pytest',
+                'pytest-cov',
+            ],
         cmdclass={'test': PyTest},
-        test_suite='escpos.tests',
         include_package_data=True,
         license='Apache Software License',
         platforms='any',
@@ -103,5 +98,6 @@ setup(
                 'Programming Language :: Python :: 2.7',
                 'Topic :: Printing',
                 'Topic :: Software Development :: Libraries :: Python Modules',
+                'Topic :: Office/Business :: Financial :: Point-Of-Sale',
             ]
     )
