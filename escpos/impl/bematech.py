@@ -130,24 +130,26 @@ class _ESCBematech(_CommandSet):
         # QRCodes are used in receipts for "NFC-e" which is an eletronic legal
         # document.
         #
+        # Further illumination was taken from [3].
+        #
         # [1] http://partners.bematech.com.br/bemacast/Paginas/post.aspx?idPost=6162
         # [2] http://svn.code.sf.net/p/acbr/code/trunk/Fontes/ACBrNFe2/ACBrNFeDANFeESCPOS.pas
+        # [3] http://www.pctoledo.com.br/forum/viewtopic.php?f=20&t=17161
         #
         # Since link [1] isn't a permalink, don't be surprised if it's broken.
         #
-        _unknown_param_1 = 3
-        _unknown_param_2 = 8
-        _unknown_param_3 = 8
-        _unknown_param_4 = 1
+        _qr_size_param_0 = 3
+        _qr_size_param_1 = 8
+        _qr_size_param_2 = 8
+        _qr_size_param_3 = 1
 
-        size_L = len(data) % 255
-        size_H = len(data) // 255
+        size_H, size_L = divmod(len(data), 256)
 
         command = '\x1D\x6B\x51' + \
-                chr(_unknown_param_1) + \
-                chr(_unknown_param_2) + \
-                chr(_unknown_param_3) + \
-                chr(_unknown_param_4) + \
+                chr(_qr_size_param_0) + \
+                chr(_qr_size_param_1) + \
+                chr(_qr_size_param_2) + \
+                chr(_qr_size_param_3) + \
                 chr(size_L) + \
                 chr(size_H) + \
                 data
