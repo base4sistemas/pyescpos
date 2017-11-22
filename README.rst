@@ -130,6 +130,43 @@ You can connect to your printer through network TCP/IP interface.
     printer.init()
     printer.text('Hello World!')
 
+File Print Example
+----------------------
+
+This printer “prints” just into a file-handle. Especially on *nix-systems this comes very handy.
+
+This class is used for parallel port printer or other printers that are directly attached to the filesystem. Note that you should stay away from using USB-to-Parallel-Adapter since they are unreliable and produce arbitrary errors.
+
+.. sourcecode:: python
+
+    from escpos.file import FileConnection
+    from escpos.impl.elgin import ElginI9
+
+    conn = FileConnection('/dev/usb/lp1')
+    printer = ElginI9(conn)
+    printer.init()
+    printer.text('Hello World!')
+    print printer.device.output
+
+
+Dummy Print Example
+----------------------
+
+The Dummy-printer is mainly for testing- and debugging-purposes. It stores all of the “output” as raw ESC/POS in a string and returns that.
+
+.. sourcecode:: python
+
+    from escpos.dummy import DummyConnection
+    from escpos.impl.epson import GenericESCPOS
+
+    conn = DummyConnection()
+    printer = GenericESCPOS(conn)
+    printer.init()
+    printer.text('Hello World!')
+
+    print printer.device.output
+
+
 
 Printing Barcodes
 -----------------
