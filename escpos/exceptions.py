@@ -23,3 +23,11 @@ class TimeoutException(Exception):
 
 class CashDrawerException(Exception):
     pass
+
+
+class NonWritableSocketError(Exception):
+    pass
+
+
+class NonReadableSocketError(Exception):
+    pass
