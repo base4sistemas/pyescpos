@@ -72,7 +72,8 @@ setup(
         long_description=long_description,
         packages=[
                 'escpos',
-                'escpos.impl'
+                'escpos.impl',
+                'escpos.conn',
             ],
         install_requires=read_install_requires(),
         tests_require=[

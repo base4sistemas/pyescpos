@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/serial.py
+# escpos/conn/serial.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #
@@ -25,9 +25,9 @@ import sys
 import serial as pyserial
 from six import string_types
 
-from .helpers import TimeoutHelper
-from .helpers import chunks
-from .helpers import hexdump
+from ..helpers import TimeoutHelper
+from ..helpers import chunks
+from ..helpers import hexdump
 
 
 DEFAULT_READ_TIMEOUT = 1

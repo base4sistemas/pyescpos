@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/file.py
+# escpos/conn/file.py
 #
 # Copyright 2017 KMEE INFORMATICA LTDA
 #
@@ -17,47 +17,51 @@
 # limitations under the License.
 #
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 
 class FileConnection(object):
-    def __init__(self, devfile="/dev/usb/lp0",
-                 auto_flush=True,
-                 *args, **kwargs):
 
+    def __init__(self, devfile="/dev/usb/lp0", auto_flush=True):
         super(FileConnection, self).__init__()
-
         self.devfile = devfile
         self.auto_flush = auto_flush
         self.open()
 
-    def open(self):
-        """ Open system file """
-        self.device = open(self.devfile, "wb")
 
+    def open(self):
+        """Open system file."""
+        self.device = open(self.devfile, "wb")
         if self.device is None:
             print("Could not open the specified file {0}".format(self.devfile))
 
+
     def flush(self):
-        """ Flush printing content """
+        """Flush printing content."""
         self.device.flush()
 
-    def write(self, data):
-        """ Print any command sent in raw format
 
-        :param msg: arbitrary code to be printed
-        :type msg: bytes
+    def write(self, data):
+        """Print any command sent in raw format.
+
+        :param bytes data: arbitrary code to be printed.
         """
         self.device.write(data)
         if self.auto_flush:
             self.flush()
 
+
     def close(self):
-        """ Close system file """
+        """Close system file."""
         if self.device is not None:
             self.device.flush()
             self.device.close()
 
+
     def catch(self):
         return True
 
+
     def read(self):
-	pass
+	   pass

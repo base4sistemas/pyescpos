@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/network.py
+# escpos/conn/network.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #
@@ -17,58 +17,28 @@
 # limitations under the License.
 #
 
+from __future__ import absolute_import
+
 import select
 import socket
-import time
 
 from six.moves import range
 
-from .exceptions import NonReadableSocketError
-from .exceptions import NonWritableSocketError
+from .. import config
+from ..exceptions import NonReadableSocketError
+from ..exceptions import NonWritableSocketError
+from ..retry import backoff
 
 
 DEFAULT_READ_BUFSIZE = 4096
 
-
-def backoff(settings):
-    # Based on "Retry" from "Python Decorator Library":
-    # https://wiki.python.org/moin/PythonDecoratorLibrary#Retry
-    if settings.max_tries <= 0:
-        raise ValueError('Max tries must be greater than 0; got {!r}'.format(settings.max_tries))
-
-    if settings.delay <= 0:
-        raise ValueError('Delay must be greater than 0; got {!r}'.format(settings.delay))
-
-    if settings.backoff <= 1:
-        raise ValueError('Backoff must be greater than 1; got {!r}'.format(settings.backoff))
-
-    def outter(f):
-        def inner(*args, **kwargs):
-            mtries, mdelay = settings.max_tries, settings.delay # make mutable
-            while mtries > 0:
-                try:
-                    retval = f(*args, **kwargs)
-                except settings.exceptions as er:
-                    mtries -= 1 # consume an attempt
-                    if mtries <= 0:
-                        raise # run out of tries
-                    time.sleep(mdelay) # wait...
-                    mdelay *= settings.backoff # make future wait longer
-                else:
-                    # we're done without errors
-                    return retval
-        return inner
-    return outter
+_RETRY_EXCEPTIONS = (
+        NonReadableSocketError,
+        NonWritableSocketError,
+        socket.error,)
 
 
-class RetrySettings(object):
-    max_tries = 3
-    delay = 3
-    backoff = 2
-    exceptions = (
-            NonReadableSocketError,
-            NonWritableSocketError,
-            socket.error,)
+config.configure()
 
 
 class NetworkConnection(object):
@@ -192,21 +162,37 @@ class NetworkConnection(object):
             return ''
 
 
-    @backoff(RetrySettings)
+    @backoff(
+            max_tries=config.retry.max_tries,
+            delay=config.retry.delay,
+            factor=config.retry.factor,
+            exceptions=_RETRY_EXCEPTIONS)
     def release(self):
         return self._raw_release()
 
 
-    @backoff(RetrySettings)
+    @backoff(
+            max_tries=config.retry.max_tries,
+            delay=config.retry.delay,
+            factor=config.retry.factor,
+            exceptions=_RETRY_EXCEPTIONS)
     def catch(self):
         return self._raw_catch()
 
 
-    @backoff(RetrySettings)
+    @backoff(
+            max_tries=config.retry.max_tries,
+            delay=config.retry.delay,
+            factor=config.retry.factor,
+            exceptions=_RETRY_EXCEPTIONS)
     def write(self, data):
         return self._raw_write(data)
 
 
-    @backoff(RetrySettings)
+    @backoff(
+            max_tries=config.retry.max_tries,
+            delay=config.retry.delay,
+            factor=config.retry.factor,
+            exceptions=_RETRY_EXCEPTIONS)
     def read(self):
         return self._raw_read()

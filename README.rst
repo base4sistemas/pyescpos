@@ -105,7 +105,7 @@ Serial communications support requires `PySerial`_ version 2.7 or later.
 
 .. sourcecode:: python
 
-    from escpos.serial import SerialConnection
+    from escpos import SerialConnection
     from escpos.impl.epson import GenericESCPOS
 
     # assumes RTS/CTS for 'ttyS5' and infers an instance of RTSCTSConnection
@@ -122,7 +122,7 @@ You can connect to your printer through network TCP/IP interface.
 
 .. sourcecode:: python
 
-    from escpos.network import NetworkConnection
+    from escpos import NetworkConnection
     from escpos.impl.epson import GenericESCPOS
 
     conn = NetworkConnection.create('10.0.0.101:9100')
@@ -130,42 +130,66 @@ You can connect to your printer through network TCP/IP interface.
     printer.init()
     printer.text('Hello World!')
 
-File Print Example
-----------------------
 
-This printer “prints” just into a file-handle. Especially on *nix-systems this comes very handy.
+Bluetooth Example
+-----------------
 
-This class is used for parallel port printer or other printers that are directly attached to the filesystem. Note that you should stay away from using USB-to-Parallel-Adapter since they are unreliable and produce arbitrary errors.
+You can connect to your printer through a bluetooth interface (only via RFCOMM).
+Bluetooth support requires `PyBluez`_ version 0.22.
 
 .. sourcecode:: python
 
-    from escpos.file import FileConnection
+    from escpos import BluetoothConnection
+    from escpos.impl.epson import GenericESCPOS
+
+    # uses SPD (service port discovery) services to find which port to connect to
+    conn = BluetoothConnection.create('00:01:02:03:04:05')
+    printer = GenericESCPOS(conn)
+    printer.init()
+    printer.text('Hello World!')
+
+If you know in which port you can connect beforehand, just pass its number after
+device address using a forward slash, for example ``00:01:02:03:04:05/4``, will
+connect to port ``4`` on ``00:01:02:03:04:05`` address.
+
+
+File Print Example
+------------------
+
+This printer “prints” just into a file-handle. Especially on *nix-systems this
+comes very handy. A common use case is when you hava parallel port printer or
+any other printer that are directly attached to the filesystem. Note that you
+may want to stay away from using USB-to- Parallel-Adapters since they are
+extremely unreliable and produce many arbitrary errors.
+
+.. sourcecode:: python
+
+    from escpos import FileConnection
     from escpos.impl.elgin import ElginI9
 
     conn = FileConnection('/dev/usb/lp1')
     printer = ElginI9(conn)
     printer.init()
     printer.text('Hello World!')
-    print printer.device.output
+    print(printer.device.output)
 
 
 Dummy Print Example
-----------------------
+-------------------
 
-The Dummy-printer is mainly for testing- and debugging-purposes. It stores all of the “output” as raw ESC/POS in a string and returns that.
+The Dummy-printer is mainly for testing- and debugging-purposes. It stores all
+of the “output” as raw ESC/POS in a string and returns that.
 
 .. sourcecode:: python
 
-    from escpos.dummy import DummyConnection
+    from escpos import DummyConnection
     from escpos.impl.epson import GenericESCPOS
 
     conn = DummyConnection()
     printer = GenericESCPOS(conn)
     printer.init()
     printer.text('Hello World!')
-
-    print printer.device.output
-
+    print(printer.device.output)
 
 
 Printing Barcodes
@@ -213,6 +237,40 @@ so they can pass RE validation.
     printer.ean13('4007817525070')  # is OK and prints 4007817525074 as expected
 
 
+Configuring Resilient Connections
+---------------------------------
+
+Network (TCP/IP) and Bluetooth (RFCOMM) connections provided by PyESCPOS both
+use a simple `exponential backoff`_ algorithm to implement a (more) resilient
+connection to the device. Your application or your users can configure *backoff*
+retry parameters through a well-known INI-like file format:
+
+.. sourcecode:: ini
+
+    [retry]
+    max_tries = 3
+    delay = 3
+    factor = 2
+
+Whose parameters are:
+
+* ``max_tries`` (integer ``> 0``) Number of tries before give up;
+* ``delay`` (integer ``> 0``) Delay between retries (in seconds);
+* ``factor`` (integer ``> 1``) Multiply factor in which delay will be increased
+  for the next retry.
+
+Normally that file lives in ``~/.escpos/config.cfg`` but you can determine
+where you want to put this file. For that you must call ``config.configure``
+function indicating full path to the configuration file, for example:
+
+.. sourcecode:: python
+
+    from escpos import config
+    config.configure(filename='/path/to/config.cfg')
+
+Your application must call ``config.configure`` before importing anything else.
+
+
 More Examples
 -------------
 
@@ -243,8 +301,10 @@ It is important that you read this **disclaimer**.
 .. _`Epson ESCPOS FAQ`: http://content.epson.de/fileadmin/content/files/RSD/downloads/escpos.pdf
 .. _`python-escpos`: https://github.com/manpaz/python-escpos
 .. _`PySerial`: http://pyserial.sourceforge.net/
+.. _`PyBluez`: http://karulis.github.io/pybluez/
 .. _`Epson`: http://www.epson.com/
 .. _`Elgin`: http://www.elgin.com.br/
 .. _`Nitere`: http://www.nitere.com.br/
 .. _`Bematech S/A`: http://www.bematechus.com/
 .. _`Urmet Daruma`: http://daruma.com.br/
+.. _`exponential backoff`: https://en.wikipedia.org/wiki/Exponential_backoff
