@@ -60,6 +60,42 @@ def _get_qrcode_module_size(**kwargs):
 
 
 class GenericESCPOS(object):
+    """The ESC/POS base class implementation.
+
+    .. todo::
+        Provide default 'GS k' symbology: UPC-A.
+
+    .. todo::
+        Provide default 'GS k' symbology: UPC-E.
+
+    .. todo::
+        Provide default 'GS k' symbology: Code 39.
+
+    .. todo::
+        Provide default 'GS k' symbology: ITF-14.
+
+    .. todo::
+        Provide default 'GS k' symbology: Codabar NW-7.
+
+    .. todo::
+        Provide default 'GS k' symbology: Code 93.
+
+    .. todo::
+        Provide default 'GS k' symbology: GS1-128 (UCC/EAN-128).
+
+    .. todo::
+        Provide default 'GS k' symbology: GS1 DataBar Omnidirectional.
+
+    .. todo::
+        Provide default 'GS k' symbology: GS1 DataBar Truncated.
+
+    .. todo::
+        Provide default 'GS k' symbology: GS1 DataBar Limited.
+
+    .. todo::
+        Provide default 'GS k' symbology: GS1 DataBar Expanded.
+
+    """
 
     device = None
     """
@@ -161,34 +197,38 @@ class GenericESCPOS(object):
         self.device.write('\x1B\x45' + param)
 
 
-    def ean13(self, data, **kwargs):
-        """
-        Render given ``data`` as **EAN-13** barcode symbology.
-        """
-        if not re.match(r'\d{13}', data):
-            raise ValueError('EAN-13 symbology requires 13 digits of data; '
-                    'got {:d} digits ("{!s}")'.format(len(data), data))
-        barcode.validate_barcode_args(**kwargs)
-        return self._ean13_impl(data, **kwargs)
-
-
-    def _ean13_impl(self, data, **kwargs):
-        raise NotImplementedError()
-
-
     def ean8(self, data, **kwargs):
-        """
-        Render given ``data`` as **EAN-8** barcode symbology.
-        """
+        """Render given ``data`` as **JAN-8/EAN-8** barcode symbology."""
         if not re.match(r'\d{8}', data):
-            raise ValueError('EAN-8 symbology requires 8 digits of data; '
-                    'got {:d} digits ("{!s}")'.format(len(data), data))
+            raise ValueError('JAN-8/EAN-8 symbology requires 8 digits of data; '
+                    'got {:d} digits: {!r}'.format(len(data), data))
         barcode.validate_barcode_args(**kwargs)
         return self._ean8_impl(data, **kwargs)
 
 
     def _ean8_impl(self, data, **kwargs):
-        raise NotImplementedError()
+        commands = barcode.gs_k_barcode(barcode.JAN8_EAN8, data, **kwargs)
+        for cmd in commands:
+            self.device.write(cmd)
+        time.sleep(0.25) # wait for barcode to be printed
+        return self.device.read()
+
+
+    def ean13(self, data, **kwargs):
+        """Render given ``data`` as **JAN-13/EAN-13** barcode symbology."""
+        if not re.match(r'\d{13}', data):
+            raise ValueError('JAN-13/EAN-13 symbology requires 13 digits of '
+                    'data; got {:d} digits: {!r}'.format(len(data), data))
+        barcode.validate_barcode_args(**kwargs)
+        return self._ean13_impl(data, **kwargs)
+
+
+    def _ean13_impl(self, data, **kwargs):
+        commands = barcode.gs_k_barcode(barcode.JAN13_EAN13, data, **kwargs)
+        for cmd in commands:
+            self.device.write(cmd)
+        time.sleep(0.25) # wait for barcode to be printed
+        return self.device.read()
 
 
     def code128(self, data, **kwargs):
@@ -209,13 +249,14 @@ class GenericESCPOS(object):
         if not re.match(r'^[\x20-\x7F]+$', data):
             raise ValueError('Invalid Code 128 symbology. Code 128 can encode '
                     'any ASCII character ranging from 32 (20h) to 127 (7Fh); '
-                    'got "%s"' % data)
+                    'got {!r}'.format(data))
+        codeset = kwargs.pop('codeset', barcode.CODE128_A)
         barcode.validate_barcode_args(**kwargs)
-        return self._code128_impl(data, **kwargs)
+        return self._code128_impl(data, codeset=codeset, **kwargs)
 
 
     def _code128_impl(self, data, **kwargs):
-        codeset = kwargs.get('codeset', 'A')
+        codeset = kwargs.get('codeset', barcode.CODE128_A)
         if not is_value_in(barcode.CODE128_CODESETS, codeset):
             raise ValueError('Unknown Code 128 code set: {!r}'.format(codeset))
 

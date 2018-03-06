@@ -206,7 +206,7 @@ barcode as you asked.
 .. sourcecode:: python
 
     from escpos import barcode
-    from escpos.serial import SerialConnection
+    from escpos import SerialConnection
     from escpos.impl.epson import GenericESCPOS
 
     conn = SerialConnection.create('COM1:9600,8,1,N')
@@ -226,19 +226,10 @@ barcode as you asked.
 
     printer.cut()
 
-
-The barcode data should be complete, that is, an EAN-13 barcode is formed from
-twelve digits plus check-digit. Most of the ESC/POS command implementations
-require only twelve digits and automaticaly calculate the check-digit.
-If you are dealing with, say, EAN-13 codes without the thirteenth-digit (the
-check-digit) just append zero (``0``) to the barcode class (or method) argument,
-so they can pass RE validation.
-
-.. sourcecode::
-
-    printer.ean13('4007817525074')  # is OK
-    printer.ean13('400781752507')   # raises ValueError
-    printer.ean13('4007817525070')  # is OK and prints 4007817525074 as expected
+The barcode data should be complete including check digits and any other payload
+data required that makes that data valid for the symbology you're dealing with.
+Thus, if you need to print an EAN-13 barcode, for example, you need to provide
+all thirteen digits.
 
 
 Configuring Resilient Connections
