@@ -103,3 +103,26 @@ class ElginI7(ElginI9):
         super(ElginI7, self).__init__(device)
         self.hardware_features.update({feature.CUTTER: False})
         self.hardware_features.update(features)
+
+
+class ElginRM22(ElginI9):
+    """Implementation for Elgin RM-22 portable thermal printer."""
+
+    model = _Model(name=u'Elgin RM-22', vendor=_VENDOR)
+
+
+    def __init__(self, device, features={}):
+        super(ElginRM22, self).__init__(device)
+        self.hardware_features.update({
+                feature.CUTTER: False,
+                feature.CASHDRAWER_PORTS: False,
+                feature.CASHDRAWER_AVAILABLE_PORTS: 0,
+                feature.PORTABLE: True,
+            })
+        self.hardware_features.update(features)
+
+
+    def _kick_drawer_impl(self, port=0, **kwargs):
+        # honor cash-drawer absence behavior (do nothing)
+        pass
+

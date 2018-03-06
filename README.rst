@@ -61,6 +61,9 @@ Current implementations was tested against following hardware:
 | `Elgin`_                | Elgin i7          | CV1.00.08         |                                         |
 |                         |                   |                   |                                         |
 +-------------------------+-------------------+-------------------+-----------------------------------------+
+| `Elgin`_                | Elgin RM-22       | 1.00.09           | Elgin RM-22 portable thermal mini       |
+|                         |                   |                   | printer                                 |
++-------------------------+-------------------+-------------------+-----------------------------------------+
 | `Nitere`_               | NPDV-1020         | -                 | Multifunction Terminal model TMF-101/IG |
 |                         |                   |                   | (an alias for CB55-C model)             |
 +-------------------------+-------------------+-------------------+-----------------------------------------+
@@ -88,6 +91,7 @@ Which produces an output similar to::
     Daruma DR700............. escpos.impl.daruma.DR700
     Elgin I7................. escpos.impl.elgin.ElginI7
     Elgin I9................. escpos.impl.elgin.ElginI9
+    Elgin RM-22.............. escpos.impl.elgin.ElginRM22
     Epson TM-T20............. escpos.impl.epson.TMT20
     Generic Daruma........... escpos.impl.daruma.DarumaGeneric
     Generic ESC/POS.......... escpos.impl.epson.GenericESCPOS
