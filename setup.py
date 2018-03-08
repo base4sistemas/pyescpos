@@ -48,21 +48,26 @@ long_description = read('README.rst')
 
 
 class PyTest(TestCommand):
+    # Based on sugested implementation:
+    # https://docs.pytest.org/en/latest/goodpractices.html#manual-integration
     user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
 
     def initialize_options(self):
         TestCommand.initialize_options(self)
-        self.pytest_args = []
-
-    def finalize_options(self):
-        TestCommand.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
+        self.pytest_args = ''
 
     def run_tests(self):
         import pytest # import here, cause outside the eggs aren't loaded
-        errno = pytest.main(self.pytest_args)
+        import shlex
+        errno = pytest.main(shlex.split(self.pytest_args))
         sys.exit(errno)
+
+    def run(self):
+        # Avoid installing dependencies in a ".egg/" directory during tests
+        # execution, which is useful if you are running in a virtualenv and
+        # want to use dependencies already installed in your environment.
+        self.distribution.install_requires = []
+        TestCommand.run(self)
 
 
 setup(

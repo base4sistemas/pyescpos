@@ -17,15 +17,34 @@
 # limitations under the License.
 #
 
+from collections import namedtuple
+
 """A bunch of identifiers representing hardware features."""
 
+COLUMNS = 'columns'
 CUTTER = 'cutter'
 CASHDRAWER_PORTS = 'cashdrawer-ports'
 CASHDRAWER_AVAILABLE_PORTS = 'cashdrawer-available-ports'
 PORTABLE = 'portable'
 
 
+Columns = namedtuple('Columns', 'normal expanded condensed')
+
+
+class FeatureAttributes(object):
+
+    def __init__(self, impl):
+        self._impl = impl
+
+    def __getattr__(self, attr):
+        if attr in self._impl.hardware_features:
+            return self._impl.hardware_features[attr]
+        raise AttributeError('\'{}.feature\' object has no attribute {!r}'.format(
+                self._impl.__class__.__name__, attr))
+
+
 _SET = {
+        COLUMNS: Columns(normal=48, expanded=24, condensed=64),
         CUTTER: False,
         CASHDRAWER_PORTS: True,
         CASHDRAWER_AVAILABLE_PORTS: 2,

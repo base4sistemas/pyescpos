@@ -25,8 +25,4 @@ __version__ = '0.0.13'
 
 logging.getLogger('escpos').addHandler(logging.NullHandler())
 
-from .conn.bt import BluetoothConnection
-from .conn.dummy import DummyConnection
-from .conn.file import FileConnection
-from .conn.network import NetworkConnection
-from .conn.serial import SerialConnection
+from .conn import *

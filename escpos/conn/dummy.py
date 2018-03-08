@@ -26,6 +26,14 @@ class DummyConnection(object):
     generating print jobs for later use, or testing output.
     """
 
+    SETTINGS_EXAMPLE = None
+
+
+    @classmethod
+    def create(cls, settings):
+        return cls()
+
+
     def __init__(self, *args, **kwargs):
         super(DummyConnection, self).__init__()
         self._output_list = []

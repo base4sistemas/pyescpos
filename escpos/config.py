@@ -58,7 +58,6 @@ def configure(filename=None):
     parser = SafeConfigParser()
 
     if os.path.isfile(filename):
-        _ensure_directory(filename)
         with open(filename, 'r') as fp:
             parser.readfp(fp)
 
@@ -86,7 +85,7 @@ def reconfigure(filename=None):
 
 
 def _ensure_directory(filename):
-    path, name = os.path.split(filename)
+    path, _ = os.path.split(filename)
     if not os.path.isdir(path):
         logger.warning('creating configuration directory for: %r', filename)
         os.makedirs(path)

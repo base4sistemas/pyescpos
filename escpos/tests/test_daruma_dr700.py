@@ -29,3 +29,9 @@ def printer():
 
 def test_has_model_attr(printer):
     assert hasattr(printer, 'model')
+
+
+def test_feature_attribute_columns(printer):
+    assert printer.feature.columns.normal == 48
+    assert printer.feature.columns.expanded == 24
+    assert printer.feature.columns.condensed == 57

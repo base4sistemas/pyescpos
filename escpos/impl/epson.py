@@ -119,10 +119,16 @@ class GenericESCPOS(object):
 
     def __init__(self, device, features={}):
         super(GenericESCPOS, self).__init__()
-        self.hardware_features = feature._SET
+        self._feature_attrs = feature.FeatureAttributes(self)
+        self.hardware_features = feature._SET.copy()
         self.hardware_features.update(features)
         self.device = device
         self.device.catch()
+
+
+    @property
+    def feature(self):
+        return self._feature_attrs
 
 
     def init(self):

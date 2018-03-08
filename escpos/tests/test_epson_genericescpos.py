@@ -20,6 +20,7 @@
 import pytest
 
 from escpos.impl.epson import GenericESCPOS
+from escpos import feature
 
 
 @pytest.fixture(scope='module')
@@ -29,3 +30,16 @@ def printer():
 
 def test_has_model_attr(printer):
     assert hasattr(printer, 'model')
+
+
+def test_has_feature_attribute(printer):
+    assert hasattr(printer, 'feature')
+    assert isinstance(printer.feature, feature.FeatureAttributes)
+
+
+def test_feature_attribute_columns(printer):
+    assert hasattr(printer.feature, feature.COLUMNS)
+    assert printer.feature.columns.normal == 48
+    assert printer.feature.columns.expanded == 24
+    assert printer.feature.columns.condensed == 64
+

@@ -118,6 +118,10 @@ class ElginRM22(ElginI9):
                 feature.CASHDRAWER_PORTS: False,
                 feature.CASHDRAWER_AVAILABLE_PORTS: 0,
                 feature.PORTABLE: True,
+                feature.COLUMNS: feature.Columns(
+                        normal=32,
+                        expanded=16,
+                        condensed=42),
             })
         self.hardware_features.update(features)
 

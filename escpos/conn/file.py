@@ -23,6 +23,14 @@ from __future__ import print_function
 
 class FileConnection(object):
 
+    SETTINGS_EXAMPLE = '/dev/usb/lp0'
+
+
+    @classmethod
+    def create(cls, settings, **kwargs):
+        return cls(devfile=settings, **kwargs)
+
+
     def __init__(self, devfile="/dev/usb/lp0", auto_flush=True):
         super(FileConnection, self).__init__()
         self.devfile = devfile

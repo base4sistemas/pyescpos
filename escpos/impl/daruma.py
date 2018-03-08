@@ -164,6 +164,17 @@ class DR700(DarumaGeneric):
     model = _Model(name=u'Daruma DR700', vendor=_VENDOR)
 
 
+    def __init__(self, device, features={}):
+        super(DR700, self).__init__(device)
+        self.hardware_features.update({
+                feature.COLUMNS: feature.Columns(
+                        normal=48,
+                        expanded=24,
+                        condensed=57)
+            })
+        self.hardware_features.update(features)
+
+
 def _translate_barcode_height(value):
     return 50 if value < 50 else value
 

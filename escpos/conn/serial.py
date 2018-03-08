@@ -384,6 +384,9 @@ class SerialSettings(object):
 
 class SerialConnection(object):
 
+    SETTINGS_EXAMPLE = '/dev/ttyS0:9600,8,1,N,RTSCTS'
+
+
     def __init__(self, settings,
             read_timeout=DEFAULT_READ_TIMEOUT,
             write_timeout=DEFAULT_WRITE_TIMEOUT,

@@ -62,6 +62,9 @@ def find_rfcomm_port(address):
 class BluetoothConnection(object):
     """Implements a basic bluetooth RFCOMM communication façade."""
 
+    SETTINGS_EXAMPLE = '00:01:02:03:04:05/1'
+
+
     @classmethod
     def create(cls, settings):
         """Create a :class:`BluetoothConnection`:

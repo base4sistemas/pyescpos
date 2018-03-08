@@ -44,6 +44,9 @@ config.configure()
 class NetworkConnection(object):
     """Implements a potentially resilient network TCP/IP connection."""
 
+    SETTINGS_EXAMPLE = '192.168.0.100:9100'
+
+
     @classmethod
     def create(cls, setting, **kwargs):
         """Instantiate a :class:`NetworkConnection` (or subclass) object based
