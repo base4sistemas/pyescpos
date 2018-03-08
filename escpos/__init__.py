@@ -21,7 +21,7 @@ from __future__ import absolute_import
 
 import logging
 
-__version__ = '0.0.13'
+__version__ = '0.1'
 
 logging.getLogger('escpos').addHandler(logging.NullHandler())
 
