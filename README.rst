@@ -166,7 +166,7 @@ connect to port ``4`` on ``00:01:02:03:04:05`` address.
 File Print Example
 ------------------
 
-This printer “prints” just into a file-handle. Especially on *nix-systems this
+This printer “prints” just into a file-handle. Especially on \*nix-systems this
 comes very handy. A common use case is when you hava parallel port printer or
 any other printer that are directly attached to the filesystem. Note that you
 may want to stay away from using USB-to- Parallel-Adapters since they are
