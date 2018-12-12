@@ -37,8 +37,8 @@ models belonging to the same manufacturer.
 This project aims to make viable the use, at the *point-of-sale* (POS), of
 different printers (the most common ones, at least) that are minimally based on
 ESC/POS |reg| standard, without need to modify the client application code. To
-achieve this, it is necessary to draw a lowest common denominator between
-features and provide implementations that seek to meet this minimum.
+achieve this, it is necessary to set a lowest common denominator between
+needed features and provide implementations that seek to meet this minimum.
 
 
 Current Implementations
@@ -55,10 +55,11 @@ Current implementations was tested against following hardware:
 | `Epson`_                | TM-T20            | 1.14              |                                         |
 |                         |                   |                   |                                         |
 +-------------------------+-------------------+-------------------+-----------------------------------------+
-| `Elgin`_                | Elgin i9          | CV1.03.20         |                                         |
-|                         |                   |                   |                                         |
+| `Elgin`_                | Elgin i9          | 1.03.20,          |                                         |
+|                         |                   | 1.03.24,          |                                         |
+|                         |                   | 1.03.31           |                                         |
 +-------------------------+-------------------+-------------------+-----------------------------------------+
-| `Elgin`_                | Elgin i7          | CV1.00.08         |                                         |
+| `Elgin`_                | Elgin i7          | 1.00.08           |                                         |
 |                         |                   |                   |                                         |
 +-------------------------+-------------------+-------------------+-----------------------------------------+
 | `Elgin`_                | Elgin RM-22       | 1.00.09           | Elgin RM-22 portable thermal mini       |
@@ -73,6 +74,10 @@ Current implementations was tested against following hardware:
 | `Urmet Daruma`_         | DR700 L/H/M and   | 02.51.00,         |                                         |
 |                         | DR700 L-e/H-e     | 01.20.00,         |                                         |
 |                         |                   | 01.21.00          |                                         |
++-------------------------+-------------------+-------------------+-----------------------------------------+
+| `Urmet Daruma`_         | DR800 L/H         | 03.13.01          |                                         |
+|                         |                   |                   |                                         |
+|                         |                   |                   |                                         |
 +-------------------------+-------------------+-------------------+-----------------------------------------+
 
 You can get a list of all available implementations with the following snippet:
@@ -89,6 +94,7 @@ Which produces an output similar to::
     Bematech MP-4200 TH...... escpos.impl.bematech.MP4200TH
     CB55-C................... escpos.impl.unknown.CB55C
     Daruma DR700............. escpos.impl.daruma.DR700
+    Daruma DR800............. escpos.impl.daruma.DR800
     Elgin I7................. escpos.impl.elgin.ElginI7
     Elgin I9................. escpos.impl.elgin.ElginI9
     Elgin RM-22.............. escpos.impl.elgin.ElginRM22

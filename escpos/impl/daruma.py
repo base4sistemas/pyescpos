@@ -86,6 +86,20 @@ class DarumaGeneric(GenericESCPOS):
         self.device.write(chr(asc.DC1) if flag else chr(asc.DC3))
 
 
+    def cut(self, partial=True):
+        """
+        Trigger cutter to perform full paper cut.
+
+        .. note::
+
+            Daruma ESC/POS command set does not offer control over full or
+            partial cut directly through cutter trigger command.
+
+        """
+        if self.hardware_features.get(feature.CUTTER, False):
+            self.device.write('\x1B\x6d')
+
+
     def _barcode_impl(self, processed_data, symbology, **kwargs):
         barcode_height = _translate_barcode_height(
                 kwargs.get('barcode_height', 50))
@@ -173,6 +187,21 @@ class DR700(DarumaGeneric):
                         condensed=57)
             })
         self.hardware_features.update(features)
+
+
+class DR800(DarumaGeneric):
+    """
+    Urmet Daruma DR800 thermal printer implementation.
+    Support models DR800 L and H.
+    """
+
+    model = _Model(name=u'Daruma DR800', vendor=_VENDOR)
+
+
+    def __init__(self, device, features=None):
+        super(DR800, self).__init__(device)
+        self.hardware_features.update({feature.CUTTER: True})
+        self.hardware_features.update(features or {})
 
 
 def _translate_barcode_height(value):
