@@ -22,7 +22,7 @@ from __future__ import absolute_import
 import logging
 import os
 
-from ConfigParser import SafeConfigParser
+from six.moves.configparser import SafeConfigParser
 from collections import namedtuple
 
 from . import constants
@@ -58,7 +58,7 @@ def configure(filename=None):
     parser = SafeConfigParser()
 
     if os.path.isfile(filename):
-        with open(filename, 'r') as fp:
+        with open(filename, 'rt') as fp:
             parser.readfp(fp)
 
     if not parser.has_section(RETRY_SECTION):
@@ -67,7 +67,7 @@ def configure(filename=None):
         parser.set(RETRY_SECTION, 'delay', str(constants.BACKOFF_DEFAULT_DELAY))
         parser.set(RETRY_SECTION, 'factor', str(constants.BACKOFF_DEFAULT_FACTOR))
 
-        with open(filename, 'wb') as fp:
+        with open(filename, 'wt') as fp:
             parser.write(fp)
 
     retry = RetrySettings(
