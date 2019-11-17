@@ -178,6 +178,17 @@ class GenericESCPOS(object):
         self.device.write('\x1B\x61\x02')
 
 
+    def set_code_page(self, code_page):
+        """Set code page for character printing. This can be used in combination
+        with bytearray to convert encoding. For example:
+
+            for char in bytearray(unicode_text, 'cp1251'):
+                printer.device.write(chr(char))
+        """
+        assert code_page >= 0 and code_page <= 255
+        self.device.write('\x1B\x74' + chr(code_page))
+
+
     def set_text_size(self, width, height):
         if (0 <= width <= 7) and (0 <= height <= 7):
             size = 16 * width + height
