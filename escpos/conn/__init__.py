@@ -16,16 +16,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
 
 from collections import namedtuple
+
+import six
 
 from .bt import BluetoothConnection
 from .dummy import DummyConnection
 from .file import FileConnection
 from .network import NetworkConnection
 from .serial import SerialConnection
+from .usb import USBConnection
 
 
 __all__ = [
@@ -33,7 +37,12 @@ __all__ = [
         'DummyConnection',
         'FileConnection',
         'NetworkConnection',
-        'SerialConnection',]
+        'SerialConnection',
+        'USBConnection',
+    ]
+
+if six.PY2:
+    __all__ = [name.encode('latin-1') for name in __all__]
 
 
 BLUETOOTH = 'bluetooth'
@@ -41,13 +50,14 @@ DUMMY = 'dummy'
 FILE = 'file'
 NETWORK = 'network'
 SERIAL = 'serial'
+USB = 'usb'
 
 
 ConnectionTypeInfo = namedtuple('ConnectionTypeInfo', [
-        'name', # friendly name
-        'fqname', # fully qualified name
-        'type',])
-
+        'name',  # friendly name
+        'fqname',  # fully qualified name
+        'type',
+    ])
 
 CONNECTION_TYPES = (
         (BLUETOOTH, ConnectionTypeInfo(
@@ -74,5 +84,10 @@ CONNECTION_TYPES = (
                 name='Serial (RS-232)',
                 fqname='escpos.conn.serial.SerialConnection',
                 type=SerialConnection)),
+
+        (USB, ConnectionTypeInfo(
+                name='USB',
+                fqname='escpos.conn.usb.USBConnection',
+                type=USBConnection)),
     )
 """Known implementations for connection with printers."""

@@ -16,19 +16,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
 
 from ..helpers import _Model
 from .unknown import CB55C
 
 
-_VENDOR = u'Nitere'
+_VENDOR = 'Nitere'
 
 
 class NitereNPDV1020(CB55C):
     """Alias for **Unknown OEM** :class:`~escpos.impl.unknown.CB55C` model."""
 
-    model = _Model(name=u'Nitere NPDV-1020', vendor=_VENDOR)
-
+    model = _Model(name='Nitere NPDV-1020', vendor=_VENDOR)
 
     def __init__(self, device, features={}):
         super(NitereNPDV1020, self).__init__(device, features=features)

@@ -16,13 +16,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
 
 from .. import feature
 from ..helpers import _Model
 from .epson import GenericESCPOS
 
 
-_VENDOR = u'Unknown OEM'
+_VENDOR = 'Unknown OEM'
 
 
 class CB55C(GenericESCPOS):
@@ -41,8 +44,7 @@ class CB55C(GenericESCPOS):
 
     """
 
-    model = _Model(name=u'CB55-C', vendor=_VENDOR)
-
+    model = _Model(name='CB55-C', vendor=_VENDOR)
 
     def __init__(self, device, features={}):
         super(CB55C, self).__init__(device)
@@ -53,21 +55,18 @@ class CB55C(GenericESCPOS):
             })
         self.hardware_features.update(features)
 
-
     def set_expanded(self, flag):
         # ESC W m : double width mode
-        param = '\x01' if flag else '\x00' # <m> 0=disable; 1=enable
-        self.device.write('\x1B\x57' + param)
-
+        param = b'\x01' if flag else b'\x00'  # <m> 0=disable; 1=enable
+        self.device.write(b'\x1B\x57' + param)
 
     def set_condensed(self, flag):
         # ESC ! n : formatting characters
-        param = '\x01' if flag else '\x00' # <n> 0=disable; 1=enable (bit 0)
-        self.device.write('\x1B\x21' + param)
-
+        param = b'\x01' if flag else b'\x00'  # <n> 0=disable; 1=enable (bit 0)
+        self.device.write(b'\x1B\x21' + param)
 
     def set_emphasized(self, flag):
         # ESC E : Enable emphasized mode
         # ESC F : Disable emphasized mode
-        param = '\x45' if flag else '\x46'
-        self.device.write('\x1B' + param)
+        param = b'\x45' if flag else b'\x46'
+        self.device.write(b'\x1B' + param)

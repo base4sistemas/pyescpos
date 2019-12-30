@@ -16,17 +16,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
 
-"""
-    `Bematech S.A. <http://www.bematechus.com/>`_ ESC/POS printer implementation
-    and ESC/POS derivative command sets.
-
-    This manufacturer embed two sets of commands, the default ESC/POS and
-    another one called *ESC/Bematech* which is based on their own standards,
-    although looks like some sort of a derivative work.
-"""
-
-import re
 import time
 
 from six.moves import range
@@ -35,12 +28,21 @@ from .. import barcode
 from .. import feature
 from ..constants import CASHDRAWER_DEFAULT_DURATION
 from ..exceptions import CashDrawerException
-from ..helpers import is_value_in
+from ..helpers import as_char
 from ..helpers import _Model
 from .epson import GenericESCPOS
 
+"""
+`Bematech S.A. <http://www.bematechus.com/>`_ ESC/POS printer implementation
+and ESC/POS derivative command sets.
 
-_VENDOR = u'Bematech S/A'
+This manufacturer embed two sets of commands, the default ESC/POS and
+another one called *ESC/Bematech* which is based on their own standards,
+although looks like some sort of a derivative work.
+"""
+
+
+_VENDOR = 'Bematech S/A'
 
 
 _CASHDRAWER_DURATION_MIN = 50
@@ -52,6 +54,14 @@ class _CommandSet(object):
     def __init__(self, impl):
         super(_CommandSet, self).__init__()
         self._impl = impl
+
+    @property
+    def encoding(self):
+        return self._impl.encoding
+
+    @property
+    def encoding_errors(self):
+        return self._impl.encoding_errors
 
 
 class _ESCPOS(_CommandSet):
@@ -69,59 +79,56 @@ class _ESCBematech(_CommandSet):
     """
 
     def set_expanded(self, flag):
-        onoff = '\x31' if flag else '\x30'
-        self._impl.device.write('\x1B\x57' + onoff) # ESC W n
-
+        onoff = b'\x31' if flag else b'\x30'
+        self._impl.device.write(b'\x1B\x57' + onoff)  # ESC W n
 
     def set_condensed(self, flag):
-        onoff = '\x0F' if flag else '\x48'
-        self._impl.device.write('\x1B' + onoff)
-
+        onoff = b'\x0F' if flag else b'\x48'
+        self._impl.device.write(b'\x1B' + onoff)
 
     def set_emphasized(self, flag):
-        onoff = '\x45' if flag else '\x46'
-        self._impl.device.write('\x1B' + onoff)
-
+        onoff = b'\x45' if flag else b'\x46'
+        self._impl.device.write(b'\x1B' + onoff)
 
     def _barcode_configure(self, **kwargs):
         if 'barcode_height' in kwargs:
             barcode_height = kwargs.get('barcode_height')
-            self._impl.device.write('\x1D\x68' + chr(barcode_height))
+            self._impl.device.write(b'\x1D\x68' + as_char(barcode_height))
 
         if 'barcode_width' in kwargs:
             widths = {
                     barcode.BARCODE_NORMAL_WIDTH: 2,
                     barcode.BARCODE_DOUBLE_WIDTH: 3,
-                    barcode.BARCODE_QUADRUPLE_WIDTH: 4,}
+                    barcode.BARCODE_QUADRUPLE_WIDTH: 4,
+                }
             barcode_width = widths.get(kwargs.get('barcode_width'))
-            self._impl.device.write('\x1D\x77' + chr(barcode_width))
+            self._impl.device.write(b'\x1D\x77' + as_char(barcode_width))
 
         if 'barcode_hri' in kwargs:
             values = {
                     barcode.BARCODE_HRI_NONE: 0,
                     barcode.BARCODE_HRI_TOP: 1,
                     barcode.BARCODE_HRI_BOTTOM: 2,
-                    barcode.BARCODE_HRI_BOTH: 3,}
+                    barcode.BARCODE_HRI_BOTH: 3,
+                }
             barcode_hri = values.get(kwargs.get('barcode_hri'))
-            self._impl.device.write('\x1D\x48' + chr(barcode_hri))
-
+            self._impl.device.write(b'\x1D\x48' + as_char(barcode_hri))
 
     def _barcode_render(self, command):
         self._impl.device.write(command)
         time.sleep(0.25)
         return self._impl.device.read()
 
-
     def code128(self, data, **kwargs):
         self._barcode_configure(**kwargs)
-        return self._barcode_render(
-                '\x1D\x6B\x49{}{}'.format(chr(len(data)), data))
-
+        bar_data = data.encode(self.encoding, self.encoding_errors)
+        size = as_char(len(bar_data))
+        return self._barcode_render(b'\x1D\x6B\x49' + size + bar_data)
 
     def qrcode(self, data, **kwargs):
         # IMPORTANT WARNING
         #
-        # Bematech provides a poor documentation for QRCodes [1] in a couple
+        # Bematech provides poor documentation for QRCodes [1] in a couple
         # of "developer partners" articles at their web-site, available only in
         # brazilian portuguese, despite its name. These articles does not
         # describe the meaning of 4 parameters.
@@ -136,63 +143,68 @@ class _ESCBematech(_CommandSet):
         # [2] http://svn.code.sf.net/p/acbr/code/trunk/Fontes/ACBrNFe2/ACBrNFeDANFeESCPOS.pas
         # [3] http://www.pctoledo.com.br/forum/viewtopic.php?f=20&t=17161
         #
-        # Since link [1] isn't a permalink, don't be surprised if it's broken.
+        # Since link [1] isn't a permalink, don't be surprised if it is broken.
         #
         _qr_size_param_0 = 3
         _qr_size_param_1 = 8
         _qr_size_param_2 = 8
         _qr_size_param_3 = 1
 
-        size_H, size_L = divmod(len(data), 256)
+        qr_data = data.encode(self.encoding, self.encoding_errors)
+        size_H, size_L = divmod(len(qr_data), 256)
 
-        command = '\x1D\x6B\x51' + \
-                chr(_qr_size_param_0) + \
-                chr(_qr_size_param_1) + \
-                chr(_qr_size_param_2) + \
-                chr(_qr_size_param_3) + \
-                chr(size_L) + \
-                chr(size_H) + \
-                data
+        command = (
+                b'\x1D\x6B\x51'
+                + as_char(_qr_size_param_0)
+                + as_char(_qr_size_param_1)
+                + as_char(_qr_size_param_2)
+                + as_char(_qr_size_param_3)
+                + as_char(size_L)
+                + as_char(size_H)
+                + qr_data
+            )
 
         self._impl.device.write(command)
-        time.sleep(1) # sleeps one second for qrcode to be printed
+        time.sleep(1)  # sleeps one second for qrcode to be printed
         response = self._impl.device.read()
         return response
-
 
     def kick_drawer(self, port=0, **kwargs):
         # although concrete implementations may have any number of available
         # cash drawer ports, ESC/Bematech foresees two cash drawers anyways
         available_ports = self._impl.hardware_features.get(
-                feature.CASHDRAWER_AVAILABLE_PORTS)
+                feature.CASHDRAWER_AVAILABLE_PORTS
+            )
 
         if port not in range(available_ports):
             ports_list = ', '.join(str(p) for p in range(available_ports))
-            raise CashDrawerException('invalid cash drawer port: {!r} '
-                    '(hardware features only ports: {})'.format(
-                            port,
-                            ports_list))
+            raise CashDrawerException((
+                    'invalid cash drawer port: {!r} (hardware features '
+                    'only ports: {})'
+                ).format(port, ports_list))
 
         duration = kwargs.get('duration', CASHDRAWER_DEFAULT_DURATION)
-        if duration not in range(
-                _CASHDRAWER_DURATION_MIN, _CASHDRAWER_DURATION_MAX + 1):
-            raise ValueError('illegal cash drawer activation duration: {!r} '
-                    '(in milliseconds, ranging from {!r} up to {!r}'.format(
-                            duration,
-                            _CASHDRAWER_DURATION_MIN,
-                            _CASHDRAWER_DURATION_MAX))
+        start = _CASHDRAWER_DURATION_MIN
+        stop = _CASHDRAWER_DURATION_MAX + 1
+        if duration not in range(start, stop):
+            raise ValueError((
+                    'illegal cash drawer activation duration: {!r} (in '
+                    'milliseconds, ranging from {!r} up to {!r}'
+                ).format(duration, start, stop))
 
         if port == 0:
             # activate cash drawer #1 (ESC 76h)
-            self._impl.device.write('\x1B\x76' + chr(duration))
+            self._impl.device.write(b'\x1B\x76' + as_char(duration))
 
         elif port == 1:
             # activate cash drawer #2 (ESC 80h)
-            self._impl.device.write('\x1B\x80' + chr(duration))
+            self._impl.device.write(b'\x1B\x80' + as_char(duration))
 
         else:
-            raise CashDrawerException('invalid cash drawer port: {!r} '
-                    '(ESC/Bematech foresees only ports 0 and 1'.format(port))
+            raise CashDrawerException((
+                    'invalid cash drawer port: {!r} (ESC/Bematech foresees '
+                    'only ports 0 and 1'
+                ).format(port))
 
 
 class MP4200TH(GenericESCPOS):
@@ -202,8 +214,7 @@ class MP4200TH(GenericESCPOS):
     command sets depending on the operation that needs to be performed.
     """
 
-    model = _Model(name=u'Bematech MP-4200 TH', vendor=_VENDOR)
-
+    model = _Model(name='Bematech MP-4200 TH', vendor=_VENDOR)
 
     def __init__(self, device, features={}):
         super(MP4200TH, self).__init__(device)
@@ -216,33 +227,25 @@ class MP4200TH(GenericESCPOS):
         self._escpos = _ESCPOS(self)
         self._escbema = _ESCBematech(self)
 
-
     def set_expanded(self, flag):
         self._escbema.set_expanded(flag)
-
 
     def set_condensed(self, flag):
         self._escbema.set_condensed(flag)
 
-
     def set_emphasized(self, flag):
         self._escbema.set_emphasized(flag)
 
-
     def cut(self, partial=True):
         if self.hardware_features.get(feature.CUTTER, False):
-            param = '\x6D' if partial else '\x69'
-            self.device.write('\x1B' + param)
-
+            param = b'\x6D' if partial else b'\x69'
+            self.device.write(b'\x1B' + param)
 
     def _code128_impl(self, data, **kwargs):
         return self._escbema.code128(data, **kwargs)
 
-
     def _qrcode_impl(self, data, **kwargs):
         return self._escbema.qrcode(data, **kwargs)
 
-
     def _kick_drawer_impl(self, port=0, **kwargs):
         return self._escbema.kick_drawer(port=port, **kwargs)
-

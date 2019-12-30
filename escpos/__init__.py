@@ -16,13 +16,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
 
 import logging
+
 
 __version__ = '0.2'
 
 logging.getLogger('escpos').addHandler(logging.NullHandler())
 
-from .conn import *
+
+from .conn import *  # noqa: E402,F401,F403

@@ -16,6 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
 
 import pytest
 
@@ -25,8 +28,10 @@ from escpos import asc
 def test_mnemonic():
     assert asc.mnemonic(-1) is None, 'There is no mnemonic for ASCII code -1'
     assert asc.mnemonic(32) is None, 'There is no mnemonic for ASCII code 32'
-    assert asc.mnemonic(0) == 'NUL', 'Mnemonic for ASCII code 0 should be "NUL"'
     assert asc.mnemonic(31) == 'US', 'Mnemonic for ASCII code 0 should be "US"'
+    assert asc.mnemonic(0) == 'NUL', (
+            'Mnemonic for ASCII code 0 should be "NUL"'
+        )
 
 
 def test_ascii_code_from_mnemonic():

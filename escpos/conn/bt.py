@@ -16,23 +16,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
 
 import logging
 import socket
 
-import bluetooth
+try:
+    import bluetooth
+    _lib_bluetooth = True
+    _RETRY_EXCEPTIONS = (
+            bluetooth.BluetoothError,
+        )
+except ImportError:
+    # PyBluez library is optional
+    _lib_bluetooth = False
+    _RETRY_EXCEPTIONS = tuple()
 
 from .. import config
 from ..retry import backoff
-
-
-_RETRY_EXCEPTIONS = (
-        bluetooth.BluetoothError,)
-
-
-config.configure()
 
 
 logger = logging.getLogger('escpos.conn.bt')
@@ -47,23 +50,27 @@ class BluetoothPortDiscoveryError(BluetoothConnectionError):
 
 
 def find_rfcomm_port(address):
+
+    _check_lib_bluetooth()
     services = bluetooth.find_service(address=address)
     if not services:
-        raise BluetoothPortDiscoveryError('cannot find address: {!r}'.format(address))
+        raise BluetoothPortDiscoveryError(
+                'cannot find address: {!r}'.format(address)
+            )
 
     for service in services:
         if service['host'] == address and service['protocol'] == 'RFCOMM':
             return service['port']
 
-    raise BluetoothPortDiscoveryError('cannot find RFCOMM port for address: {!r}'.format(address))
-
+    raise BluetoothPortDiscoveryError(
+            'cannot find RFCOMM port for address: {!r}'.format(address)
+        )
 
 
 class BluetoothConnection(object):
     """Implements a basic bluetooth RFCOMM communication façade."""
 
     SETTINGS_EXAMPLE = '00:01:02:03:04:05/1'
-
 
     @classmethod
     def create(cls, settings):
@@ -98,10 +105,11 @@ class BluetoothConnection(object):
             try:
                 port = int(fields[1])
             except ValueError:
-                raise BluetoothConnectionError('Invalid settings: {!r}'.format(settings))
+                raise BluetoothConnectionError(
+                        'Invalid settings: {!r}'.format(settings)
+                    )
 
         return cls(address, port=port)
-
 
     def __init__(self, address, port=1):
         super(BluetoothConnection, self).__init__()
@@ -109,11 +117,10 @@ class BluetoothConnection(object):
         self.address = address
         self.port = port
 
-
     @backoff(
-            max_tries=config.retry.max_tries,
-            delay=config.retry.delay,
-            factor=config.retry.factor,
+            max_tries=config.BACKOFF_MAXTRIES,
+            delay=config.BACKOFF_DELAY,
+            factor=config.BACKOFF_FACTOR,
             exceptions=_RETRY_EXCEPTIONS)
     def release(self):
         if self.socket is not None:
@@ -121,21 +128,20 @@ class BluetoothConnection(object):
             self.socket.close()
             self.socket = None
 
-
     @backoff(
-            max_tries=config.retry.max_tries,
-            delay=config.retry.delay,
-            factor=config.retry.factor,
+            max_tries=config.BACKOFF_MAXTRIES,
+            delay=config.BACKOFF_DELAY,
+            factor=config.BACKOFF_FACTOR,
             exceptions=_RETRY_EXCEPTIONS)
     def catch(self):
+        _check_lib_bluetooth()
         self.socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
         self.socket.connect((self.address, self.port))
 
-
     @backoff(
-            max_tries=config.retry.max_tries,
-            delay=config.retry.delay,
-            factor=config.retry.factor,
+            max_tries=config.BACKOFF_MAXTRIES,
+            delay=config.BACKOFF_DELAY,
+            factor=config.BACKOFF_FACTOR,
             exceptions=_RETRY_EXCEPTIONS)
     def write(self, data):
         totalsent = 0
@@ -145,15 +151,22 @@ class BluetoothConnection(object):
                 self._raise_with_details('socket connection broken')
             totalsent += sent
 
-
     @backoff(
-            max_tries=config.retry.max_tries,
-            delay=config.retry.delay,
-            factor=config.retry.factor,
+            max_tries=config.BACKOFF_MAXTRIES,
+            delay=config.BACKOFF_DELAY,
+            factor=config.BACKOFF_FACTOR,
             exceptions=_RETRY_EXCEPTIONS)
     def read(self):
         try:
             return self.socket.recv()
-        except:
+        except:  # noqa: E722
             logger.exception('read error')
-            return ''
+            return None
+
+
+def _check_lib_bluetooth():
+    if not _lib_bluetooth:
+        raise RuntimeError(
+                'In order to make bluetooth connections you must '
+                'install PyBluez library.'
+            )

@@ -16,46 +16,48 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
+
+from escpos import constants
+
 
 class FakeDevice(object):
-    """
-    A fake device for testing printer implementations.
-    """
+    """A fake device for testing printer implementations."""
 
     def __init__(self):
         super(FakeDevice, self).__init__()
-        self._write_buffer = []
-        self._read_buffer = ''
-
+        self._write_buffer = b''
+        self._read_buffer = b''
+        self.encoding = constants.DEFAULT_ENCODING
+        self.encoding_errors = constants.DEFAULT_ENCODING_ERRORS
 
     @property
     def write_buffer(self):
         # write buffer is emptied once read
-        content = ''.join(self._write_buffer)
-        self._write_buffer[:] = []
-        return content
-
+        content_bytes = self._write_buffer
+        self._write_buffer = b''
+        return content_bytes
 
     @property
     def read_buffer(self):
         # read buffer is emptied once read
-        content = self._read_buffer
-        self._read_buffer = ''
-        return content
-
+        content_bytes = self._read_buffer
+        self._read_buffer = b''
+        return content_bytes
 
     @read_buffer.setter
-    def read_buffer(self, value):
-        self._read_buffer = value
-
+    def read_buffer(self, data):
+        # <data> (Python 2: str; Python 3: bytes)
+        self._read_buffer = data
 
     def catch(self):
         pass
 
-
     def write(self, data):
-        self._write_buffer.extend(list(data))
-
+        # <data> (Python 2: str; Python 3: bytes)
+        self._write_buffer += data
 
     def read(self):
         return self.read_buffer

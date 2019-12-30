@@ -16,8 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
 
 import inspect
 import time
@@ -25,6 +26,7 @@ import time
 from collections import namedtuple
 from operator import attrgetter
 
+from builtins import chr
 from six.moves import zip_longest
 
 from .exceptions import TimeoutException
@@ -66,15 +68,15 @@ class TimeoutHelper(object):
         self.timeout = 1
         self.set()
 
-
     def set(self):
         self._mark = time.time()
-
 
     def check(self):
         if self.timeout > 0:
             if time.time() - self._mark > self.timeout:
-                raise TimeoutException('%s seconds have passed' % self.timeout)
+                raise TimeoutException((
+                        '{!r} seconds have passed'
+                    ).format(self.timeout))
         return False
 
 
@@ -91,25 +93,33 @@ def hexdump(data):
     def _cut(sequence, size):
         for i in range(0, len(sequence), size):
             yield sequence[i:i+size]
-    _hex = lambda seq: ['{0:02x}'.format(b) for b in seq]
-    _chr = lambda seq: [chr(b) if 32 <= b <= 126 else '.' for b in seq]
+
+    def _hex(sequence):
+        return ['{0:02x}'.format(b) for b in sequence]
+
+    def _chr(sequence):
+        return [chr(b) if 32 <= b <= 126 else '.' for b in sequence]
+
     raw_data = map(ord, data)
     hexpanel = [' '.join(line) for line in _cut(_hex(raw_data), 16)]
     chrpanel = [''.join(line) for line in _cut(_chr(raw_data), 16)]
     hexpanel[-1] = hexpanel[-1] + (chr(32) * (47 - len(hexpanel[-1])))
     chrpanel[-1] = chrpanel[-1] + (chr(32) * (16 - len(chrpanel[-1])))
-    return '\n'.join('%s  %s' % (h, c) for h, c in zip(hexpanel, chrpanel))
+    return '\n'.join('{}  {}'.format(h, c) for h, c in zip(hexpanel, chrpanel))
 
 
 def is_value_in(constants_group, value):
+    """Checks whether value can be found in the given constants group,
+    which in turn, must be a Django-like choices tuple.
     """
-    Checks whether value can be found in the given constants group, which in
-    turn, should be a Django-like choices tuple.
-    """
-    for const_value, label in constants_group:
-        if const_value == value:
-            return True
-    return False
+    return value in [k for k, v in constants_group]
+
+
+def as_char(i):
+    # Python 2: assert '\x20' == as_char(32)
+    # Python 3: assert b'\x20' == as_char(32)
+    # http://python-future.org/compatible_idioms.html#chr
+    return chr(i).encode('latin-1')
 
 
 def _list_impls():
@@ -118,7 +128,7 @@ def _list_impls():
 
 
 def _impls_for(t):
-    impls = [t,]
+    impls = [t]
     for subcls in t.__subclasses__():
         impls.extend(_impls_for(subcls))
     return impls
@@ -128,7 +138,8 @@ def _describe_impl(t):
     impl = Implementation(
             model=_Model(name=t.model.name, vendor=t.model.vendor),
             type=t,
-            fqname=_fqname(t))
+            fqname=_fqname(t)
+        )
     return impl
 
 

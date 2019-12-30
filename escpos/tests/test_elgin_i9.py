@@ -16,6 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
 
 import pytest
 
@@ -34,7 +37,7 @@ def test_has_model_attr(printer):
 
 def test_kick_drawer(printer):
     printer.kick_drawer()
-    assert printer.device.write_buffer == '\x1B\x70\x00\x20\xe8'
+    assert b'\x1B\x70\x00\x20\xe8' == printer.device.write_buffer
 
 
 def test_kick_drawer_unavailable_port(printer):
@@ -44,10 +47,10 @@ def test_kick_drawer_unavailable_port(printer):
 
 
 def test_kick_drawer_custom_pulse_duration(printer):
-    printer.kick_drawer(duration=100) # 100ms (resulting t1='\x20', t2='\x84')
-    assert printer.device.write_buffer == '\x1B\x70\x00\x20\x84'
+    printer.kick_drawer(duration=100)  # 100ms (resulting t1='\x20', t2='\x84')
+    assert b'\x1B\x70\x00\x20\x84' == printer.device.write_buffer
 
 
 def test_kick_drawer_custom_pulse_duration_explicit_interval(printer):
-    printer.kick_drawer(t1='\x64', t2='\xC8') # t1=100ms, t2=200ms
-    assert printer.device.write_buffer == '\x1B\x70\x00\x64\xC8'
+    printer.kick_drawer(t1=b'\x64', t2=b'\xC8')  # t1=100ms, t2=200ms
+    assert b'\x1B\x70\x00\x64\xC8' == printer.device.write_buffer

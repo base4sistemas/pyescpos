@@ -16,6 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
 
 import pytest
 
@@ -42,4 +45,3 @@ def test_feature_attribute_columns(printer):
     assert printer.feature.columns.normal == 48
     assert printer.feature.columns.expanded == 24
     assert printer.feature.columns.condensed == 64
-

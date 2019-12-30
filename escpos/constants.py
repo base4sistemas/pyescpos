@@ -16,6 +16,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
+
+DEFAULT_ENCODING = 'utf-8'
+
+DEFAULT_ENCODING_ERRORS = 'strict'
 
 CASHDRAWER_DEFAULT_DURATION = 200
 """Duration for cash drawer activation (kick) in milliseconds.

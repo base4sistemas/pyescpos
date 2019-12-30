@@ -16,8 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
 
 import time
 import pytest
@@ -32,8 +33,10 @@ def test_chunk():
     data = 'ABCDEFG'
     chunk_size = 3
     for chunk in chunks(data, chunk_size):
-        assert len(chunk) <= chunk_size, 'Unexpected chunk size (expecting '\
-                'chunks of 3 or less elements)'
+        assert len(chunk) <= chunk_size, (
+                'Unexpected chunk size '
+                '(expecting chunks of 3 or less elements)'
+            )
 
 
 def test_timeout():
@@ -59,5 +62,6 @@ def test_find_implementations():
             break
     else:
         found_fqnames = [i.fqname for i in impls]
-        raise RuntimeError('Cannot find expected FQ name {!r}; found FQ names: '
-                '{!r}'.format(expected_fqname, found_fqnames))
+        raise RuntimeError((
+                'Cannot find expected FQ name {!r}; found FQ names: {!r}'
+            ).format(expected_fqname, found_fqnames))

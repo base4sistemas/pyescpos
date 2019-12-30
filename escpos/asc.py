@@ -16,6 +16,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
+
 
 NUL = 0
 SOH = 1
@@ -86,18 +90,15 @@ MNEMONIC_TABLE = (
 
 
 def mnemonic(n):
-    """
-    Returns mnemonic for ``n`` if ``0 <= n <= 31`` or ``None``.
-    """
+    """Returns mnemonic for ``n`` if ``0 <= n <= 31`` or ``None``."""
     if 0 <= n <= 31:
         return MNEMONIC_TABLE[n][1]
     return None
 
 
 def value(mnemonic):
-    """
-    Returns the value of mnemonic (case-insensitive). Raises ``ValueError`` if
-    the given mnemonic does not exists.
+    """Returns the value of mnemonic (case-insensitive).
+    Raises ``ValueError`` if given mnemonic does not exists.
     """
     codes, mnemonics = zip(*MNEMONIC_TABLE)
     return mnemonics.index(mnemonic.upper())

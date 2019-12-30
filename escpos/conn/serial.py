@@ -16,14 +16,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
 
 import os
 import sys
 
-import serial as pyserial
+from future.utils import python_2_unicode_compatible
 from six import string_types
+
+try:
+    import serial as pyserial
+    _lib_pyserial = True
+except ImportError:
+    # PySerial library is optional
+    _lib_pyserial = False
 
 from ..helpers import TimeoutHelper
 from ..helpers import chunks
@@ -59,6 +67,7 @@ def scan_ports():
         ((0, '/dev/ttyS0'), (1, '/dev/ttyS1'), ...)
 
     """
+    _check_lib_pyserial()
     names = []
     for number in range(256):
         try:
@@ -67,7 +76,8 @@ def scan_ports():
             s = pyserial.Serial(number)
             name = getattr(s, 'name', getattr(s, 'portstr', str(number)))
             names.append((number, name,))
-        except:
+        except:  # noqa: E722
+            # we expect many fails when scanning for serial ports
             pass
     return tuple(names)
 
@@ -99,6 +109,7 @@ def get_baudrates():
     """
     Returns supported baud rates in a Django-like choices tuples.
     """
+    _check_lib_pyserial()
     baudrates = []
     s = pyserial.Serial()
     for name, value in s.getSupportedBaudrates():
@@ -110,6 +121,7 @@ def get_databits():
     """
     Returns supported byte sizes in a Django-like choices tuples.
     """
+    _check_lib_pyserial()
     databits = []
     s = pyserial.Serial()
     for name, value in s.getSupportedByteSizes():
@@ -121,6 +133,7 @@ def get_stopbits():
     """
     Returns supported stop bit lengths in a Django-like choices tuples.
     """
+    _check_lib_pyserial()
     stopbits = []
     s = pyserial.Serial()
     for name, value in s.getSupportedStopbits():
@@ -132,6 +145,7 @@ def get_parities():
     """
     Returns supported parities in a Django-like choices tuples.
     """
+    _check_lib_pyserial()
     parities = []
     s = pyserial.Serial()
     for name, value in s.getSupportedParities():
@@ -146,6 +160,7 @@ def get_protocols():
     return FLOW_CONTROL_PROTOCOLS
 
 
+@python_2_unicode_compatible
 class SerialSettings(object):
     """
     Holds serial port configurations.
@@ -185,19 +200,16 @@ class SerialSettings(object):
 
 
     def __str__(self):
-        # eg: "/dev/ttyS0:9600:8:1:N:RTSCTS"
-        value = ':'.join([
+        # eg: "/dev/ttyS0:9600,8,1,N,RTSCTS"
+        params = ','.join([
                 self._portname,
                 self._baudrate,
                 self._databits,
                 self._stopbits,
                 self._parity,
-                self._protocol,])
-        return value
-
-
-    def __unicode__(self):
-        return unicode(self.__str__())
+                self._protocol,
+            ])
+        return '{}:{}'.format(self._portname, params)
 
 
     @property
@@ -463,6 +475,8 @@ class SerialConnection(object):
 
 
     def catch(self):
+        _check_lib_pyserial()
+
         if self.comport is not None:
             if self.comport.isOpen():
                 self.comport.close()
@@ -536,26 +550,36 @@ class DSRDTRConnection(SerialConnection):
         return self.comport.getDSR()
 
 
-class _SerialDumper(pyserial.Serial):
-    """
-    This class is used as a wrapper for ``pyserial.Serial`` to allow dumping
-    the data that is about to be sent over the serial connection. For example:
+if _lib_pyserial:
+    class _SerialDumper(pyserial.Serial):
+        """
+        This class is used as a wrapper for ``pyserial.Serial`` to allow dumping
+        the data that is about to be sent over the serial connection. For example:
 
-    .. sourcecode:: python
+        .. sourcecode:: python
 
-        settings = SerialSettings.as_from('/dev/ttyS5:9600,8,1,N')
-        printer = GenericESCPOS(settings.get_device())
-        printer.init()
-        1b 40                                            .@
+            settings = SerialSettings.as_from('/dev/ttyS5:9600,8,1,N')
+            printer = GenericESCPOS(settings.get_device())
+            printer.init()
+            1b 40                                            .@
 
-        printer.text('Hello World!')
-        48 65 6c 6c 6f 20 57 6f 72 6c 64 21              Hello World!
-        0a                                               .
+            printer.text('Hello World!')
+            48 65 6c 6c 6f 20 57 6f 72 6c 64 21              Hello World!
+            0a                                               .
 
-    """
+        """
 
-    def write(self, data):
-        if sys.stdout.isatty():
-            sys.stdout.write(hexdump(data))
-            sys.stdout.write(os.linesep)
-        super(_SerialDumper, self).write(data)
+        def write(self, data):
+            if sys.stdout.isatty():
+                sys.stdout.write(hexdump(data))
+                sys.stdout.write(os.linesep)
+            super(_SerialDumper, self).write(data)
+
+
+def _check_lib_pyserial():
+    if not _lib_pyserial:
+        raise RuntimeError(
+                'In order to make serial connections you must install '
+                'PySerial library. Alternatively you may want to install '
+                'PyESCPOS using \'pip install pyescpos[serial]\' to '
+                'automatically install dependencies for serial connections.')

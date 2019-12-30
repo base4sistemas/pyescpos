@@ -16,8 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
 
 import logging
 import time
@@ -44,8 +45,9 @@ def backoff(
     :param int delay: Delay between retries (in seconds). Defaults to
         :const:`~escpos.constants.BACKOFF_DEFAULT_DELAY`.
 
-    :param int factor: Multiply factor in which delay will be increased for the
-        next retry. Defaults to :const:`~escpos.constants.BACKOFF_DEFAULT_FACTOR`.
+    :param int factor: Multiply factor in which delay will be increased for
+        the next retry. Defaults to
+        :const:`~escpos.constants.BACKOFF_DEFAULT_FACTOR`.
 
     :param exceptions: Tuple of exception types to catch that triggers retry.
         Any exception not listed will break the decorator and retry routines
@@ -55,28 +57,39 @@ def backoff(
 
     """
     if max_tries <= 0:
-        raise ValueError('Max tries must be greater than 0; got {!r}'.format(max_tries))
+        raise ValueError((
+                'Max tries must be greater than 0; got {!r}'
+            ).format(max_tries))
 
     if delay <= 0:
-        raise ValueError('Delay must be greater than 0; got {!r}'.format(delay))
+        raise ValueError((
+                'Delay must be greater than 0; got {!r}'
+            ).format(delay))
 
     if factor <= 1:
-        raise ValueError('Backoff factor must be greater than 1; got {!r}'.format(factor))
+        raise ValueError((
+                'Backoff factor must be greater than 1; got {!r}'
+            ).format(factor))
 
     def outter(f):
         def inner(*args, **kwargs):
-            m_max_tries, m_delay = max_tries, delay # make mutable
+            m_max_tries, m_delay = max_tries, delay  # make mutable
             while m_max_tries > 0:
                 try:
                     retval = f(*args, **kwargs)
                 except exceptions:
-                    logger.exception('backoff retry for: %r (max_tries=%r, delay=%r, '
-                            'factor=%r, exceptions=%r)', f, max_tries, delay, factor, exceptions)
-                    m_max_tries -= 1 # consume an attempt
+                    logger.exception(
+                            (
+                                'backoff retry for: %r (max_tries=%r, '
+                                'delay=%r, factor=%r, exceptions=%r)'
+                            ),
+                            f, max_tries, delay, factor, exceptions
+                        )
+                    m_max_tries -= 1  # consume an attempt
                     if m_max_tries <= 0:
-                        raise # run out of tries
-                    time.sleep(m_delay) # wait...
-                    m_delay *= factor # make future wait longer
+                        raise  # run out of tries
+                    time.sleep(m_delay)  # wait...
+                    m_delay *= factor  # make future wait longer
                 else:
                     # we're done without errors
                     return retval

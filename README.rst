@@ -23,22 +23,17 @@ PyESCPOS
 A Python support for Epson |copy| ESC/POS |reg| compatible printers. Read more
 at `Epson ESCPOS FAQ`_ (PDF document).
 
-This project is inspired on Manuel F. Martinez work for `python-escpos`_
-implementation, among other projects, whose specific bits of work (available
-here on Github and many other open-source repositories) has helped so much.
+The ESC/POS |reg| is a standard that every manufacturer work on and modify to
+suit their needs. That way, a sequence of commands in one printer does not
+necessarily works (or does not work as expected) on another. At a distance, you
+can say that all those tricky commands are identical from model to model (a
+standard), but when you look just a little bit more deeper, you quickly realize
+that they can be completely different, even between models belonging to the
+same manufacturer.
 
-The ESC/POS |reg| is a standard that every manufacturer tend to modify to suit
-their (even already implemented) needs. Indeed, there is no standard but
-something awkward, an illusion of a standard. On the surface, one can say
-that it's pretty much the same, but when you look just a little bit more deeper,
-you quickly realize that they are almost completely different, even between
-models belonging to the same manufacturer.
-
-This project aims to make viable the use, at the *point-of-sale* (POS), of
-different printers (the most common ones, at least) that are minimally based on
-ESC/POS |reg| standard, without need to modify the client application code. To
-achieve this, it is necessary to set a lowest common denominator between
-needed features and provide implementations that seek to meet this minimum.
+This project aims to simplify the usage of printers, seeking for a lowest common
+denominator between needed features and providing implementations that meet this
+minimum for known models, so you do not have to modify the application code.
 
 
 Current Implementations
@@ -108,27 +103,10 @@ Which produces an output similar to::
 Usage Examples
 ==============
 
-Serial RS232 Example
---------------------
-
-Serial communications support requires `PySerial`_ version 2.7 or later.
-
-.. sourcecode:: python
-
-    from escpos import SerialConnection
-    from escpos.impl.epson import GenericESCPOS
-
-    # assumes RTS/CTS for 'ttyS5' and infers an instance of RTSCTSConnection
-    conn = SerialConnection.create('/dev/ttyS5:9600,8,1,N')
-    printer = GenericESCPOS(conn)
-    printer.init()
-    printer.text('Hello World!')
-
-
 Network TCP/IP Example
 ----------------------
 
-You can connect to your printer through network TCP/IP interface.
+You can connect to your printer through network TCP/IP interface:
 
 .. sourcecode:: python
 
@@ -141,11 +119,35 @@ You can connect to your printer through network TCP/IP interface.
     printer.text('Hello World!')
 
 
+Serial Example
+--------------
+
+Support for Serial connections is optional. If you need it you should have
+`PySerial`_ library installed. You may do it through PIP issuing ``pip install
+PyESCPOS[serial]``.
+
+Here is how you can make a Serial connection:
+
+.. sourcecode:: python
+
+    from escpos import SerialConnection
+    from escpos.impl.epson import GenericESCPOS
+
+    # connect to port 'ttyS5' @ 9600 Bps, assuming RTS/CTS for handshaking
+    conn = SerialConnection.create('/dev/ttyS5:9600,8,1,N')
+    printer = GenericESCPOS(conn)
+    printer.init()
+    printer.text('Hello World!')
+
+
 Bluetooth Example
 -----------------
 
-You can connect to your printer through a bluetooth interface (only via RFCOMM).
-Bluetooth support requires `PyBluez`_ version 0.22.
+Support for Bluetooth (via RFCOMM) connection is optional. If you need it you
+should have `PyBluez`_ library installed. One option may be installing PyESCPOS
+through PIP issuing ``pip install PyESCPOS[bluetooth]``.
+
+Here is how you can make a Bluetooth connection:
 
 .. sourcecode:: python
 
@@ -163,12 +165,33 @@ device address using a forward slash, for example ``00:01:02:03:04:05/4``, will
 connect to port ``4`` on ``00:01:02:03:04:05`` address.
 
 
+USB Example
+-----------
+
+Support for USB connections is optional. If you need it you should have
+`PyUSB`_ library installed. You may do it through PIP issuing ``pip install
+PyESCPOS[usb]``. Be aware for printers with more than one USB interface, so
+you may have to configure which interface is active.
+
+Here is how you can make an USB connection:
+
+.. sourcecode:: python
+
+    from escpos.ifusb import USBConnection
+    from escpos.impl.elgin import ElginRM22
+
+    conn = USBConnection.create('20d1:7008,interface=0,ep_out=3,ep_in=0')
+    printer = ElginRM22(conn)
+    printer.init()
+    printer.text('Hello World!')
+
+
 File Print Example
 ------------------
 
 This printer “prints” just into a file-handle. Especially on \*nix-systems this
-comes very handy. A common use case is when you hava parallel port printer or
-any other printer that are directly attached to the filesystem. Note that you
+comes very handy. A common use case is when you have a parallel port printer or
+any other printer that are directly attached to the file system. Note that you
 may want to stay away from using USB-to- Parallel-Adapters since they are
 extremely unreliable and produce many arbitrary errors.
 
@@ -218,24 +241,28 @@ barcode as you asked.
     conn = SerialConnection.create('COM1:9600,8,1,N')
     printer = GenericESCPOS(conn)
     printer.init()
-    printer.code128('0123456789',
-            barcode_height=96, # ~12mm (~1/2")
+    printer.code128(
+            '0123456789',
+            barcode_height=96,  # ~12mm (~1/2")
             barcode_width=barcode.BARCODE_DOUBLE_WIDTH,
-            barcode_hri=barcode.BARCODE_HRI_BOTTOM)
+            barcode_hri=barcode.BARCODE_HRI_BOTTOM
+        )
 
     printer.lf()
 
-    printer.ean13('4007817525074',
-            barcode_height=120, # ~15mm (~9/16"),
+    printer.ean13(
+            '4007817525074',
+            barcode_height=120,  # ~15mm (~9/16"),
             barcode_width=barcode.BARCODE_NORMAL_WIDTH,
-            barcode_hri=barcode.BARCODE_HRI_TOP)
+            barcode_hri=barcode.BARCODE_HRI_TOP
+        )
 
     printer.cut()
 
-The barcode data should be complete including check digits and any other payload
-data required that makes that data valid for the symbology you're dealing with.
-Thus, if you need to print an EAN-13 barcode, for example, you need to provide
-all thirteen digits.
+The barcode data you pass as a parameter should be complete including check
+digits and any other payload data required that makes that data valid for the
+symbology you're dealing with. Thus, if you need to print an EAN-13 barcode,
+for example, you need to provide all thirteen digits.
 
 
 Configuring Resilient Connections
@@ -243,33 +270,20 @@ Configuring Resilient Connections
 
 Network (TCP/IP) and Bluetooth (RFCOMM) connections provided by PyESCPOS both
 use a simple `exponential backoff`_ algorithm to implement a (more) resilient
-connection to the device. Your application or your users can configure *backoff*
-retry parameters through a well-known INI-like file format:
+connection to the device. Your application or your users can configure retry
+parameters through environment variables (or files):
 
-.. sourcecode:: ini
+* ``ESCPOS_BACKOFF_MAXTRIES`` (int ``> 0``, defaults to ``3``) Number of tries
+  before give up;
 
-    [retry]
-    max_tries = 3
-    delay = 3
-    factor = 2
+* ``ESCPOS_BACKOFF_DELAY`` (int ``> 0``, defaults to ``3``) Delay in seconds
+  between retries;
 
-Whose parameters are:
+* ``ESCPOS_BACKOFF_FACTOR`` (int ``> 1``, defaults to ``2``) Multiply factor
+  in which delay will be increased each retry.
 
-* ``max_tries`` (integer ``> 0``) Number of tries before give up;
-* ``delay`` (integer ``> 0``) Delay between retries (in seconds);
-* ``factor`` (integer ``> 1``) Multiply factor in which delay will be increased
-  for the next retry.
-
-Normally that file lives in ``~/.escpos/config.cfg`` but you can determine
-where you want to put this file. For that you must call ``config.configure``
-function indicating full path to the configuration file, for example:
-
-.. sourcecode:: python
-
-    from escpos import config
-    config.configure(filename='/path/to/config.cfg')
-
-Your application must call ``config.configure`` before importing anything else.
+This library uses `python-decouple`_ to grab those values from the environment
+or files, depending on how you have configured ``decouple``.
 
 
 More Examples
@@ -278,10 +292,18 @@ More Examples
 Eventually you may find more examples in the `PyESCPOS wiki`_ pages.
 
 
+Acknowledgement
+===============
+
+This project is inspired on Manuel F. Martinez work for `python-escpos`_
+implementation, among other projects, whose specific bits of work (available
+here on Github and many other open-source repositories) has helped so much.
+
+
 Disclaimer
 ==========
 
-It is important that you read this **disclaimer**.
+Please, read this **disclaimer**.
 
     None of the vendors cited in this project agree or endorse any of the
     patterns or implementations. Its names are used only to maintain context.
@@ -301,8 +323,10 @@ It is important that you read this **disclaimer**.
 .. _`PyESCPOS wiki`: https://github.com/base4sistemas/pyescpos/wiki
 .. _`Epson ESCPOS FAQ`: http://content.epson.de/fileadmin/content/files/RSD/downloads/escpos.pdf
 .. _`python-escpos`: https://github.com/manpaz/python-escpos
+.. _`python-decouple`: https://github.com/henriquebastos/python-decouple
 .. _`PySerial`: http://pyserial.sourceforge.net/
 .. _`PyBluez`: http://karulis.github.io/pybluez/
+.. _`PyUSB`: https://pyusb.github.io/pyusb/
 .. _`Epson`: http://www.epson.com/
 .. _`Elgin`: http://www.elgin.com.br/
 .. _`Nitere`: http://www.nitere.com.br/

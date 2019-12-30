@@ -16,10 +16,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
 
 import pytest
 
-import bluetooth
+try:
+    import bluetooth
+    _lib_bluetooth = True
+except ImportError:
+    _lib_bluetooth = False
 
 from escpos.conn.bt import find_rfcomm_port
 from escpos.conn.bt import BluetoothPortDiscoveryError
@@ -33,37 +40,34 @@ class FakeBluetoothSocket(object):
         self._connected = False
         self._buffer = []
 
-
     def connect(self, address):
         self._connected = True
-
 
     def shutdown(self, how):
         self._connected = False
 
-
     def close(self):
         self._connected = False
-
 
     def send(self, data):
         self._assert_connected()
         self._buffer.append(data)
         return len(data)
 
-
     def recv(self):
         self._assert_connected()
         return ''.join(self._buffer)
-
 
     def _assert_connected(self):
         assert self._connected, 'Connection is closed or has been shutdown'
 
 
+@pytest.mark.skipif(
+        not _lib_bluetooth,
+        reason='PyBluez library is unavailable')
 def test_find_rfcomm_port(monkeypatch):
     def mockreturn(address=None, name=None, uuid=None):
-        return [{
+        data = {
                 'description': None,
                 'host': '00:01:02:03:04:05',
                 'name': 'SerialPort',
@@ -72,8 +76,9 @@ def test_find_rfcomm_port(monkeypatch):
                 'protocol': 'RFCOMM',
                 'provider': None,
                 'service-classes': ['1101'],
-                'service-id': None
-            },]
+                'service-id': None,
+            }
+        return [data]
 
     monkeypatch.setattr(bluetooth, 'find_service', mockreturn)
 
@@ -84,15 +89,20 @@ def test_find_rfcomm_port(monkeypatch):
         port = find_rfcomm_port('00:00:00:00:00:00')
 
 
+@pytest.mark.skipif(
+        not _lib_bluetooth,
+        reason='PyBluez library is unavailable')
 def test_find_rfcomm_port_no_services(monkeypatch):
     def mockreturn(address=None, name=None, uuid=None):
         return []
     monkeypatch.setattr(bluetooth, 'find_service', mockreturn)
     with pytest.raises(BluetoothPortDiscoveryError):
-        port = find_rfcomm_port('00:00:00:00:00:00')
+        find_rfcomm_port('00:00:00:00:00:00')
 
 
-
+@pytest.mark.skipif(
+        not _lib_bluetooth,
+        reason='PyBluez library is unavailable')
 def test_simple_rxtx(monkeypatch):
     def mockreturn(protocol):
         return FakeBluetoothSocket(protocol)

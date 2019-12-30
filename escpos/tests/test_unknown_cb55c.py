@@ -16,6 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
 
 import pytest
 
@@ -33,23 +36,23 @@ def test_has_model_attr(printer):
 
 def test_expanded(printer):
     printer.set_expanded(True)
-    assert printer.device.write_buffer == '\x1B\x57\x01'
+    assert b'\x1B\x57\x01' == printer.device.write_buffer
 
     printer.set_expanded(False)
-    assert printer.device.write_buffer == '\x1B\x57\x00'
+    assert b'\x1B\x57\x00' == printer.device.write_buffer
 
 
 def test_condensed(printer):
     printer.set_condensed(True)
-    assert printer.device.write_buffer == '\x1B\x21\x01'
+    assert b'\x1B\x21\x01' == printer.device.write_buffer
 
     printer.set_condensed(False)
-    assert printer.device.write_buffer == '\x1B\x21\x00'
+    assert b'\x1B\x21\x00' == printer.device.write_buffer
 
 
 def test_emphasized(printer):
     printer.set_emphasized(True)
-    assert printer.device.write_buffer == '\x1B\x45'
+    assert b'\x1B\x45' == printer.device.write_buffer
 
     printer.set_emphasized(False)
-    assert printer.device.write_buffer == '\x1B\x46'
+    assert b'\x1B\x46' == printer.device.write_buffer

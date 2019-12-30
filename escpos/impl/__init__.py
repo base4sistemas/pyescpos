@@ -16,15 +16,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
 
-from . import bematech
-from . import daruma
-from . import elgin
-from . import epson
-from . import nitere
-from . import unknown
+import six
+
+from . import bematech  # noqa: F401
+from . import daruma  # noqa: F401
+from . import elgin  # noqa: F401
+from . import epson  # noqa: F401
+from . import nitere  # noqa: F401
+from . import unknown  # noqa: F401
+
 
 __all__ = [
         'bematech',
@@ -32,4 +36,8 @@ __all__ = [
         'elgin',
         'epson',
         'nitere',
-        'unknown',]
+        'unknown',
+    ]
+
+if six.PY2:
+    __all__ = [name.encode('latin-1') for name in __all__]

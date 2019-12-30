@@ -16,6 +16,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
 
 import re
 import time
@@ -23,40 +26,52 @@ import time
 from six.moves import range
 
 from .. import barcode
+from .. import constants
 from .. import feature
 from ..exceptions import CashDrawerException
+from ..helpers import as_char
 from ..helpers import is_value_in
 from ..helpers import _Model
 
 
-_VENDOR = u'Seiko-Epson Corporation'
+_VENDOR = 'Seiko-Epson Corporation'
 
 
-QRCODE_ERROR_CORRECTION_MAP = {
-        barcode.QRCODE_ERROR_CORRECTION_L: '\x30',  # 48d (~7%, default)
-        barcode.QRCODE_ERROR_CORRECTION_M: '\x31',  # 49d (~15%)
-        barcode.QRCODE_ERROR_CORRECTION_Q: '\x32',  # 50d (~25%)
-        barcode.QRCODE_ERROR_CORRECTION_H: '\x33',  # 51d (~30%)
+_QRCODE_ERROR_CORRECTION_MAP = {
+        barcode.QRCODE_ERROR_CORRECTION_L: b'\x30',  # 48d (~7%, default)
+        barcode.QRCODE_ERROR_CORRECTION_M: b'\x31',  # 49d (~15%)
+        barcode.QRCODE_ERROR_CORRECTION_Q: b'\x32',  # 50d (~25%)
+        barcode.QRCODE_ERROR_CORRECTION_H: b'\x33',  # 51d (~30%)
     }
 
 
-QRCODE_MODULE_SIZE_MAP = {
-        barcode.QRCODE_MODULE_SIZE_4: '\x04',
-        barcode.QRCODE_MODULE_SIZE_5: '\x05',
-        barcode.QRCODE_MODULE_SIZE_6: '\x06',
-        barcode.QRCODE_MODULE_SIZE_7: '\x07',
-        barcode.QRCODE_MODULE_SIZE_8: '\x08',
+_QRCODE_MODULE_SIZE_MAP = {
+        barcode.QRCODE_MODULE_SIZE_4: b'\x04',
+        barcode.QRCODE_MODULE_SIZE_5: b'\x05',
+        barcode.QRCODE_MODULE_SIZE_6: b'\x06',
+        barcode.QRCODE_MODULE_SIZE_7: b'\x07',
+        barcode.QRCODE_MODULE_SIZE_8: b'\x08',
     }
 
 
 def _get_qrcode_error_correction(**kwargs):
-    return QRCODE_ERROR_CORRECTION_MAP[kwargs.get('qrcode_ecc_level',
-            barcode.QRCODE_ERROR_CORRECTION_L)]
+    # adapt from PyESCPOS to Epson's own QRCode ECC level byte value
+    return _QRCODE_ERROR_CORRECTION_MAP.get(
+            kwargs.get(
+                    'qrcode_ecc_level',
+                    barcode.QRCODE_ERROR_CORRECTION_L
+                )
+        )
 
 
 def _get_qrcode_module_size(**kwargs):
-    return QRCODE_MODULE_SIZE_MAP[kwargs.get('qrcode_module_size',
-            barcode.QRCODE_MODULE_SIZE_4)]
+    # adapt from PyESCPOS to Epson's own QRCode module size byte value
+    return _QRCODE_MODULE_SIZE_MAP.get(
+            kwargs.get(
+                    'qrcode_module_size',
+                    barcode.QRCODE_MODULE_SIZE_4
+                )
+        )
 
 
 class GenericESCPOS(object):
@@ -98,8 +113,7 @@ class GenericESCPOS(object):
     """
 
     device = None
-    """
-    The device where ESCPOS commands will be written.
+    """The device where ESCPOS commands will be written.
 
     Indeed, it is an instance of a connection that represents a real device on
     the other end. It may be a serial RS232 connection, a bluetooth connection,
@@ -107,140 +121,149 @@ class GenericESCPOS(object):
     ``catch`` it, ``write`` to and ``read`` from.
     """
 
-    hardware_features = {}
-    """
-    A mapping of hardware features.
+    hardware_features = None
+    """A mapping of hardware features."""
+
+    model = _Model(name='Generic ESC/POS', vendor=_VENDOR)
+    """Basic metadata with vendor and model name."""
+
+    encoding = constants.DEFAULT_ENCODING
+    """Default encoding used to encode data before sending to device."""
+
+    encoding_errors = constants.DEFAULT_ENCODING_ERRORS
+    """How to deal with ``UnicodeEncodingError``.
+    See ``errors`` argument to ``str.encode()`` for details.
     """
 
-    model = _Model(name=u'Generic ESC/POS', vendor=_VENDOR)
-    """
-    Basic metadata with vendor and model name.
-    """
-
-    def __init__(self, device, features={}):
+    def __init__(
+            self,
+            device,
+            features=None,
+            encoding=constants.DEFAULT_ENCODING,
+            encoding_errors=constants.DEFAULT_ENCODING_ERRORS):
         super(GenericESCPOS, self).__init__()
         self._feature_attrs = feature.FeatureAttributes(self)
         self.hardware_features = feature._SET.copy()
-        self.hardware_features.update(features)
+        self.hardware_features.update(features or {})
+        self.encoding = encoding
+        self.encoding_errors = encoding_errors
         self.device = device
         self.device.catch()
-
 
     @property
     def feature(self):
         return self._feature_attrs
 
-
     def init(self):
-        self.device.write('\x1B\x40')
-
+        self.device.write(b'\x1B\x40')
 
     def lf(self, lines=1):
-        """
-        Line feed. Issues a line feed to printer *n*-times.
-        """
+        """Line feed. Issues a line feed to printer *n*-times."""
         for i in range(lines):
-            self.device.write('\x0A')
-
+            self.device.write(b'\x0A')
 
     def textout(self, text):
-        """
-        Write text "as-is".
-        """
-        self.device.write(text)
-
+        """Write text without line feed."""
+        self.device.write(text.encode(self.encoding, self.encoding_errors))
 
     def text(self, text):
-        """
-        Write text followed by a line feed.
-        """
+        """Write text followed by a line feed."""
         self.textout(text)
         self.lf()
 
-
     def text_center(self, text):
-        """
-        Shortcut method for print centered text.
-        """
+        """Shortcut method for print centered text."""
         self.justify_center()
         self.text(text)
 
-
     def justify_center(self):
-        self.device.write('\x1B\x61\x01')
-
+        self.device.write(b'\x1B\x61\x01')
 
     def justify_left(self):
-        self.device.write('\x1B\x61\x00')
-
+        self.device.write(b'\x1B\x61\x00')
 
     def justify_right(self):
-        self.device.write('\x1B\x61\x02')
-
+        self.device.write(b'\x1B\x61\x02')
 
     def set_text_size(self, width, height):
         if (0 <= width <= 7) and (0 <= height <= 7):
             size = 16 * width + height
-            self.device.write('\x1D\x21' + chr(size))
+            self.device.write(b'\x1D\x21' + as_char(size))
         else:
-            raise ValueError('Width and height should be between 0 and 7 '
-                    '(1x through 8x of magnification); got: '
-                    'width={!r}, height={!r}'.format(width, height))
-
+            raise ValueError((
+                    'Width and height should be between 0 and 7 '
+                    '(1x through 8x of magnification); '
+                    'got: width={!r}, height={!r}'
+                ).format(width, height))
 
     def set_expanded(self, flag):
-        param = '\x20' if flag else '\x00'
-        self.device.write('\x1B\x21')
-
+        self.device.write(b'\x1B\x21')
 
     def set_condensed(self, flag):
-        param = '\x0F' if flag else '\x12' # SI (on), DC2 (off)
-        self.device.write('\x1B' + param)
-
+        param = b'\x0F' if flag else b'\x12'  # SI (on), DC2 (off)
+        self.device.write(b'\x1B' + param)
 
     def set_emphasized(self, flag):
-        param = '\x01' if flag else '\x00'
-        self.device.write('\x1B\x45' + param)
-
+        param = b'\x01' if flag else b'\x00'
+        self.device.write(b'\x1B\x45' + param)
 
     def ean8(self, data, **kwargs):
-        """Render given ``data`` as **JAN-8/EAN-8** barcode symbology."""
+        """Render given data as **JAN-8/EAN-8** barcode symbology.
+
+        :param str data: The JAN-8/EAN-8 data to be rendered.
+        """
         if not re.match(r'\d{8}', data):
-            raise ValueError('JAN-8/EAN-8 symbology requires 8 digits of data; '
-                    'got {:d} digits: {!r}'.format(len(data), data))
+            raise ValueError((
+                    'JAN-8/EAN-8 symbology requires 8 digits of data; '
+                    'got {:d} digits: {!r}'
+                ).format(len(data), data))
         barcode.validate_barcode_args(**kwargs)
         return self._ean8_impl(data, **kwargs)
 
-
     def _ean8_impl(self, data, **kwargs):
-        commands = barcode.gs_k_barcode(barcode.JAN8_EAN8, data, **kwargs)
+        ean8_data = data.encode(self.encoding, self.encoding_errors)
+        commands = barcode.gs_k_barcode(
+                barcode.JAN8_EAN8,
+                ean8_data,
+                **kwargs
+            )
         for cmd in commands:
             self.device.write(cmd)
-        time.sleep(0.25) # wait for barcode to be printed
+
+        time.sleep(0.25)  # wait for barcode to be printed
         return self.device.read()
 
-
     def ean13(self, data, **kwargs):
-        """Render given ``data`` as **JAN-13/EAN-13** barcode symbology."""
+        """Render given data as **JAN-13/EAN-13** barcode symbology.
+
+        :param str data: The JAN-13/EAN-13 data to be rendered.
+        """
         if not re.match(r'\d{13}', data):
-            raise ValueError('JAN-13/EAN-13 symbology requires 13 digits of '
-                    'data; got {:d} digits: {!r}'.format(len(data), data))
+            raise ValueError((
+                    'JAN-13/EAN-13 symbology requires 13 digits of '
+                    'data; got {:d} digits: {!r}'
+                ).format(len(data), data))
         barcode.validate_barcode_args(**kwargs)
         return self._ean13_impl(data, **kwargs)
 
-
     def _ean13_impl(self, data, **kwargs):
-        commands = barcode.gs_k_barcode(barcode.JAN13_EAN13, data, **kwargs)
+        ean13_data = data.encode(self.encoding, self.encoding_errors)
+        commands = barcode.gs_k_barcode(
+                barcode.JAN13_EAN13,
+                ean13_data,
+                **kwargs
+            )
         for cmd in commands:
             self.device.write(cmd)
-        time.sleep(0.25) # wait for barcode to be printed
+
+        time.sleep(0.25)  # wait for barcode to be printed
         return self.device.read()
 
-
     def code128(self, data, **kwargs):
-        """Renders given ``data`` as **Code 128** barcode symbology.
+        """Renders given data as **Code 128** barcode symbology.
 
-        :param str codeset: Optional. Keyword argument for the subtype (code
+        :param str data: The Code 128 data to be rendered.
+        :param bytes codeset: Optional. Keyword argument for the subtype (code
             set) to render. Defaults to :attr:`escpos.barcode.CODE128_A`.
 
         .. warning::
@@ -253,38 +276,47 @@ class GenericESCPOS(object):
 
         """
         if not re.match(r'^[\x20-\x7F]+$', data):
-            raise ValueError('Invalid Code 128 symbology. Code 128 can encode '
-                    'any ASCII character ranging from 32 (20h) to 127 (7Fh); '
-                    'got {!r}'.format(data))
+            raise ValueError((
+                    'Invalid Code 128 symbology. Code 128 can encode any '
+                    'ASCII character ranging from 32 (20h) to 127 (7Fh); '
+                    'got: {!r}'
+                ).format(data))
         codeset = kwargs.pop('codeset', barcode.CODE128_A)
         barcode.validate_barcode_args(**kwargs)
         return self._code128_impl(data, codeset=codeset, **kwargs)
-
 
     def _code128_impl(self, data, **kwargs):
         codeset = kwargs.get('codeset', barcode.CODE128_A)
         if not is_value_in(barcode.CODE128_CODESETS, codeset):
             raise ValueError('Unknown Code 128 code set: {!r}'.format(codeset))
 
-        encoded_data = '{{{0}{1}'.format(codeset, data) # {<codeset><data>
-        commands = barcode.gs_k_barcode(barcode.CODE128, encoded_data, **kwargs)
+        encoded_data = (
+                b'\x7B'
+                + codeset
+                + data.encode(self.encoding, self.encoding_errors)
+            )  # {<codeset><data>
+        commands = barcode.gs_k_barcode(
+                barcode.CODE128,
+                encoded_data,
+                **kwargs
+            )
         for cmd in commands:
             self.device.write(cmd)
 
-        time.sleep(0.25) # wait for barcode to be printed
+        time.sleep(0.25)  # wait for barcode to be printed
         return self.device.read()
 
-
     def qrcode(self, data, **kwargs):
-        """
-        Render given ``data`` as `QRCode <http://www.qrcode.com/en/>`_.
+        """Render given data as `QRCode <http://www.qrcode.com/en/>`_.
+
+        :param str data: Data (QRCode contents) to be rendered.
         """
         barcode.validate_qrcode_args(**kwargs)
         return self._qrcode_impl(data, **kwargs)
 
-
     def _qrcode_impl(self, data, **kwargs):
-        num_bytes = 3 + len(data) # number of bytes after `pH`
+        qr_data = data.encode(self.encoding, self.encoding_errors)
+
         # compute HI,LO bytes for the number of bytes (parameters) after `pH`;
         # this is possibly the safest way, but alternatives are:
         #
@@ -295,50 +327,55 @@ class GenericESCPOS(object):
         #
         #     size_H, size_L = divmod(num_bytes, 256)
         #
+        num_bytes = 3 + len(qr_data)  # 3 is the number of bytes after `pH`
         size_H = (num_bytes >> 8) & 0xff
         size_L = num_bytes & 0xff
 
-        commands = []
-        commands.append(['\x1D\x28\x6B',      # GS(k
-                chr(size_L), chr(size_H), # pL pH
-                '\x31',     # cn (49 <=> 0x31 <=> QRCode)
-                '\x50',     # fn (80 <=> 0x50 <=> store symbol in memory)
-                '\x30',     #  m (48 <=> 0x30 <=> literal value)
-                data,
-            ])
+        commands = [
+                b'\x1D\x28\x6B'  # GS(k
+                + as_char(size_L)
+                + as_char(size_H)
+                + b'\x31'  # cn (49 <=> 0x31 <=> QRCode)
+                + b'\x50'  # fn (80 <=> 0x50 <=> store symbol in memory)
+                + b'\x30'  # m (48 <=> 0x30 <=> literal value)
+                + qr_data
+            ]
 
-        commands.append(['\x1D\x28\x6B',      # GS(k
-                '\x03\x00', # pL pH
-                '\x31',     # cn (49 <=> 0x31 <=> QRCode)
-                '\x45',     # fn (69 <=> 0x45 <=> error correction)
-                _get_qrcode_error_correction(**kwargs),
-            ])
+        commands.append(
+                b'\x1D\x28\x6B'  # GS(k
+                + b'\x03'  # pL
+                + b'\x00'  # pH
+                + b'\x31'  # cn (49 <=> 0x31 <=> QRCode)
+                + b'\x45'  # fn (69 <=> 0x45 <=> error correction)
+                + _get_qrcode_error_correction(**kwargs)
+            )
 
-        commands.append(['\x1D\x28\x6B',      # GS(k
-                '\x03\x00', # pL pH
-                '\x31',     # cn (49 <=> 0x31 <=> QRCode)
-                '\x43',     # fn (67 <=> 0x43 <=> module size)
-                _get_qrcode_module_size(**kwargs),
-            ])
+        commands.append(
+                b'\x1D\x28\x6B'  # GS(k
+                + b'\x03'  # pL
+                + b'\x00'  # pH
+                + b'\x31'  # cn (49 <=> 0x31 <=> QRCode)
+                + b'\x43'  # fn (67 <=> 0x43 <=> module size)
+                + _get_qrcode_module_size(**kwargs)
+            )
 
-        commands.append(['\x1D\x28\x6B',      # GS(k
-                '\x03\x00', # pL pH
-                '\x31',     # cn (49 <=> 0x31 <=> QRCode)
-                '\x51',     # fn (81 <=> 0x51 <=> print 2D symbol)
-                '\x30',     #  m (48 <=> 0x30 <=> literal value)
-            ])
+        commands.append(
+                b'\x1D\x28\x6B'  # GS(k
+                + b'\x03'  # pL
+                + b'\x00'  # pH
+                + b'\x31'  # cn (49 <=> 0x31 <=> QRCode)
+                + b'\x51'  # fn (81 <=> 0x51 <=> print 2D symbol)
+                + b'\x30'  # m (48 <=> 0x30 <=> literal value)
+            )
 
         for cmd in commands:
-            self.device.write(''.join(cmd))
+            self.device.write(cmd)
 
-        time.sleep(1) # sleeps one second for qrcode to be printed
+        time.sleep(1)  # sleeps one second for qrcode to be printed
         return self.device.read()
 
-
     def cut(self, partial=True):
-        """
-        Trigger cutter to perform partial (default) or full paper cut.
-        """
+        """Trigger cutter to perform partial (default) or full paper cut."""
         if self.hardware_features.get(feature.CUTTER, False):
             # TODO: implement hardware alternative for unavailable features
             # For example:
@@ -356,9 +393,8 @@ class GenericESCPOS(object):
             #               'cutter-full-cut': lambda impl: impl.lf(7)
             #           })
             #
-            param = '\x01' if partial else '\x00'
-            self.device.write('\x1D\x56' + param)
-
+            param = b'\x01' if partial else b'\x00'
+            self.device.write(b'\x1D\x56' + param)
 
     def kick_drawer(self, port=0, **kwargs):
         """Kick drawer connected to the given port.
@@ -380,30 +416,31 @@ class GenericESCPOS(object):
         if self.hardware_features.get(feature.CASHDRAWER_PORTS, False):
             # if feature is available assume at least one port is available
             max_ports = self.hardware_features.get(
-                    feature.CASHDRAWER_AVAILABLE_PORTS, 1)
+                    feature.CASHDRAWER_AVAILABLE_PORTS, 1
+                )
 
             if port not in range(max_ports):
-                raise CashDrawerException('invalid cash drawer port: {!r} '
-                        '(available ports are {!r})'.format(
-                                port, range(max_ports)))
+                raise CashDrawerException((
+                        'invalid cash drawer port: {!r} (available '
+                        'ports are {!r})'
+                    ).format(port, list(range(max_ports))))
 
             return self._kick_drawer_impl(port=port, **kwargs)
 
-
     def _kick_drawer_impl(self, port=0, **kwargs):
         if port not in range(2):
-            raise CashDrawerException(
-                    'invalid cash drawer port: {!r}'.format(port))
+            raise CashDrawerException((
+                    'invalid cash drawer port: {!r}'
+                ).format(port))
 
-        param = '\x00' if port == 0 else '\x01' # pulse to pin 2 or 5
-        self.device.write('\x1B\x70' + param)
+        param = b'\x00' if port == 0 else b'\x01'  # pulse to pin 2 or 5
+        self.device.write(b'\x1B\x70' + param)
 
 
 class TMT20(GenericESCPOS):
     """Epson TM-T20 thermal printer."""
 
-    model = _Model(name=u'Epson TM-T20', vendor=_VENDOR)
-
+    model = _Model(name='Epson TM-T20', vendor=_VENDOR)
 
     def __init__(self, device, features={}):
         super(TMT20, self).__init__(device)
@@ -414,12 +451,10 @@ class TMT20(GenericESCPOS):
             })
         self.hardware_features.update(features)
 
-
     def set_expanded(self, flag):
-        w = 1 if flag else 0 # magnification (Nx)
+        w = 1 if flag else 0  # magnification (Nx)
         self.set_text_size(w, 0)
 
-
     def set_condensed(self, flag):
-        param = '\x01' if flag else '\x00'
-        self.device.write('\x1B\x21' + param)
+        param = b'\x01' if flag else b'\x00'
+        self.device.write(b'\x1B\x21' + param)

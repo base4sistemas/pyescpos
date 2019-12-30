@@ -16,76 +16,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
 
-import logging
-import os
+from decouple import config
 
-from ConfigParser import SafeConfigParser
-from collections import namedtuple
-
-from . import constants
-
-
-RETRY_SECTION = 'retry'
-
-DEFAULT_CONFIG_FILENAME = os.path.join(os.path.expanduser('~'), '.escpos', 'config.cfg')
-
-RetrySettings = namedtuple('RetrySettings', ['max_tries', 'delay', 'factor',])
-
-retry = None
-
-logger = logging.getLogger('escpos.config')
+from .constants import BACKOFF_DEFAULT_MAXTRIES
+from .constants import BACKOFF_DEFAULT_DELAY
+from .constants import BACKOFF_DEFAULT_FACTOR
 
 
-def configure(filename=None):
-    """This function gives to the user application a chance to define where
-    configuration file should live. Subsequent calls to this function will have
-    no effect, unless you call :func:`reconfigure`.
+BACKOFF_MAXTRIES = config(
+        'ESCPOS_BACKOFF_MAXTRIES',
+        cast=int,
+        default=BACKOFF_DEFAULT_MAXTRIES)
 
-    :param str filename: Full path to configuration file.
+BACKOFF_DELAY = config(
+        'ESCPOS_BACKOFF_DELAY',
+        cast=int,
+        default=BACKOFF_DEFAULT_DELAY)
 
-    """
-    global retry
-
-    if getattr(configure, '_configured', False):
-        return
-
-    filename = filename or DEFAULT_CONFIG_FILENAME
-    _ensure_directory(filename)
-
-    parser = SafeConfigParser()
-
-    if os.path.isfile(filename):
-        with open(filename, 'r') as fp:
-            parser.readfp(fp)
-
-    if not parser.has_section(RETRY_SECTION):
-        parser.add_section(RETRY_SECTION)
-        parser.set(RETRY_SECTION, 'max_tries', str(constants.BACKOFF_DEFAULT_MAXTRIES))
-        parser.set(RETRY_SECTION, 'delay', str(constants.BACKOFF_DEFAULT_DELAY))
-        parser.set(RETRY_SECTION, 'factor', str(constants.BACKOFF_DEFAULT_FACTOR))
-
-        with open(filename, 'wb') as fp:
-            parser.write(fp)
-
-    retry = RetrySettings(
-            max_tries=parser.getint(RETRY_SECTION, 'max_tries'),
-            delay=parser.getint(RETRY_SECTION, 'delay'),
-            factor=parser.getint(RETRY_SECTION, 'factor'))
-
-    setattr(configure, '_configured', True)
-    setattr(configure, '_configured_filename', filename)
-
-
-def reconfigure(filename=None):
-    setattr(configure, '_configured', False)
-    configure(filename=filename)
-
-
-def _ensure_directory(filename):
-    path, _ = os.path.split(filename)
-    if not os.path.isdir(path):
-        logger.warning('creating configuration directory for: %r', filename)
-        os.makedirs(path)
+BACKOFF_FACTOR = config(
+        'ESCPOS_BACKOFF_FACTOR',
+        cast=int,
+        default=BACKOFF_DEFAULT_FACTOR)

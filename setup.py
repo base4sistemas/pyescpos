@@ -34,65 +34,77 @@ def read(*filenames, **kwargs):
     return sep.join(buf)
 
 
-def read_install_requires():
-    content = read(os.path.join('requirements', 'base.txt'))
-    return content.strip().split(os.linesep)
-
-
 def read_version():
     content = read(os.path.join('escpos', '__init__.py'))
     return re.search(r"__version__ = '([^']+)'", content).group(1)
 
 
-long_description = read('README.rst')
-
-
 class PyTest(TestCommand):
-    # Based on sugested implementation:
-    # https://docs.pytest.org/en/latest/goodpractices.html#manual-integration
-    user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
+    user_options = [('pytest-args=', 'a', 'Arguments to pass to py.test')]
 
     def initialize_options(self):
         TestCommand.initialize_options(self)
         self.pytest_args = ''
 
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+
     def run_tests(self):
-        import pytest # import here, cause outside the eggs aren't loaded
         import shlex
+        import pytest  # import here, cause outside the eggs aren't loaded
         errno = pytest.main(shlex.split(self.pytest_args))
         sys.exit(errno)
 
-    def run(self):
-        # Avoid installing dependencies in a ".egg/" directory during tests
-        # execution, which is useful if you are running in a virtualenv and
-        # want to use dependencies already installed in your environment.
-        self.distribution.install_requires = []
-        TestCommand.run(self)
 
+long_description = read('README.rst')
+
+install_requires = [
+        'future',
+        'six',
+        'python-decouple',
+    ]
+
+extras_require = {
+        'bluetooth': [
+            'PyBluez',
+        ],
+        'serial': [
+            'pySerial',
+        ],
+        'usb': [
+            'PyUSB'
+        ],
+    }
 
 setup(
         name='PyESCPOS',
         version=read_version(),
         description='Support for Epson ESC/POS printer command system.',
         long_description=long_description,
+        long_description_content_type='text/x-rst',
         packages=[
                 'escpos',
                 'escpos.impl',
                 'escpos.conn',
             ],
-        install_requires=read_install_requires(),
+        install_requires=install_requires,
+        extras_require=extras_require,
         tests_require=[
-                'pytest',
-                'pytest-cov',
+                'pytest==2.9.2',
             ],
-        cmdclass={'test': PyTest},
+        cmdclass={
+                'test': PyTest
+            },
+        test_suite='escpos.tests',
         include_package_data=True,
         license='Apache Software License',
         platforms='any',
         url='http://github.com/base4sistemas/pyescpos/',
         author='Daniel Gonçalves',
         author_email='daniel@base4.com.br',
-        classifiers = [
+        classifiers=[
                 'Development Status :: 4 - Beta',
                 'Environment :: Other Environment',
                 'Intended Audience :: Developers',
