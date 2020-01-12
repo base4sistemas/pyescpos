@@ -28,6 +28,7 @@ clean:
 	find . -type d -name '.cache' -exec rm -rv {} +
 	find . -type d -name '.pytest_cache' -exec rm -rv {} +
 	find . -type d -name 'PyESCPOS.egg-info' -exec rm -rv {} +
+	find . -type d -name 'dist' -exec rm -rv {} +
 	find . -name '*.pyc' -delete -print
 
 test: clean

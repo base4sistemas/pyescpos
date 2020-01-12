@@ -86,7 +86,6 @@ def chunks(iterable, size):
         return zip_longest(*args, fillvalue=None)
     for chunk in chunk_factory(iterable, size):
         yield ''.join([e for e in chunk if e is not None])
-    raise StopIteration()
 
 
 def hexdump(data):

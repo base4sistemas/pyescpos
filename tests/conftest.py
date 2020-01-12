@@ -20,6 +20,8 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import pytest
+
 from escpos import constants
 
 
@@ -63,5 +65,5 @@ class FakeDevice(object):
         return self.read_buffer
 
 
-def pytest_namespace():
-    return {'FakeDevice': FakeDevice}
+def pytest_configure():
+    pytest.FakeDevice = FakeDevice

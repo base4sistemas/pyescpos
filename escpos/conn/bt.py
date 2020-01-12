@@ -32,7 +32,7 @@ try:
 except ImportError:
     # PyBluez library is optional
     _lib_bluetooth = False
-    _RETRY_EXCEPTIONS = tuple()
+    _RETRY_EXCEPTIONS = ()
 
 from .. import config
 from ..retry import backoff

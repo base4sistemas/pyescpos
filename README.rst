@@ -286,10 +286,29 @@ This library uses `python-decouple`_ to grab those values from the environment
 or files, depending on how you have configured ``decouple``.
 
 
-More Examples
--------------
+More Information
+----------------
 
-Eventually you may find more examples in the `PyESCPOS wiki`_ pages.
+You will find more information in the `PyESCPOS wiki`_ pages.
+
+
+You are Welcome to Help
+=======================
+
+Here is how you setup a development enviroment:
+
+.. sourcecode:: sh
+
+    git clone git@github.com:base4sistemas/pyescpos.git
+    cd pyescpos
+    python -m venv .env_escpos
+    source .env_escpos/bin/activate
+    pip install -r requirements/dev.txt
+    tox
+
+If you gonna work with a specific type of connection (eg. Bluetooth or Serial)
+you may use ``requirements/bluetooth.txt`` or ``requirements/serial.txt``.
+Have a look inside ``requirements/`` directory for the options available.
 
 
 Acknowledgement
@@ -324,7 +343,7 @@ Please, read this **disclaimer**.
 .. _`Epson ESCPOS FAQ`: http://content.epson.de/fileadmin/content/files/RSD/downloads/escpos.pdf
 .. _`python-escpos`: https://github.com/manpaz/python-escpos
 .. _`python-decouple`: https://github.com/henriquebastos/python-decouple
-.. _`PySerial`: http://pyserial.sourceforge.net/
+.. _`PySerial`: https://pyserial.readthedocs.io/en/latest/
 .. _`PyBluez`: http://karulis.github.io/pybluez/
 .. _`PyUSB`: https://pyusb.github.io/pyusb/
 .. _`Epson`: http://www.epson.com/

@@ -14,14 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 import io
 import os
 import re
-import sys
 
 from setuptools import setup
-from setuptools.command.test import test as TestCommand
 
 
 def read(*filenames, **kwargs):
@@ -37,25 +34,6 @@ def read(*filenames, **kwargs):
 def read_version():
     content = read(os.path.join('escpos', '__init__.py'))
     return re.search(r"__version__ = '([^']+)'", content).group(1)
-
-
-class PyTest(TestCommand):
-    user_options = [('pytest-args=', 'a', 'Arguments to pass to py.test')]
-
-    def initialize_options(self):
-        TestCommand.initialize_options(self)
-        self.pytest_args = ''
-
-    def finalize_options(self):
-        TestCommand.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
-
-    def run_tests(self):
-        import shlex
-        import pytest  # import here, cause outside the eggs aren't loaded
-        errno = pytest.main(shlex.split(self.pytest_args))
-        sys.exit(errno)
 
 
 long_description = read('README.rst')
@@ -91,13 +69,6 @@ setup(
             ],
         install_requires=install_requires,
         extras_require=extras_require,
-        tests_require=[
-                'pytest==2.9.2',
-            ],
-        cmdclass={
-                'test': PyTest
-            },
-        test_suite='escpos.tests',
         include_package_data=True,
         license='Apache Software License',
         platforms='any',
@@ -114,6 +85,9 @@ setup(
                 'Operating System :: OS Independent',
                 'Programming Language :: Python',
                 'Programming Language :: Python :: 2.7',
+                'Programming Language :: Python :: 3.6',
+                'Programming Language :: Python :: 3.7',
+                'Programming Language :: Python :: 3.8',
                 'Topic :: Printing',
                 'Topic :: Software Development :: Libraries :: Python Modules',
                 'Topic :: Office/Business :: Financial :: Point-Of-Sale',
