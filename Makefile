@@ -32,4 +32,4 @@ clean:
 	find . -name '*.pyc' -delete -print
 
 test: clean
-	pipenv run python setup.py test
+	py.test
