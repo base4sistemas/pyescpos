@@ -185,7 +185,7 @@ class GenericESCPOS(object):
             for char in bytearray(unicode_text, 'cp1251'):
                 printer.device.write(chr(char))
         """
-        if 0 <= code_page <= 255:
+        if not 0 <= code_page <= 255:
             raise ValueError('Number between 0 and 255 expected.')
         self.device.write('\x1B\x74' + chr(code_page))
 
