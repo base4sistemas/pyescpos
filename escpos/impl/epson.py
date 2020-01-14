@@ -186,16 +186,77 @@ class GenericESCPOS(object):
         self.device.write(b'\x1B\x61\x02')
 
     def set_code_page(self, code_page):
-        """Set code page for character printing. This can be used in combination
-        with bytearray to convert encoding. For example:
+        """Set code page for character printing.
 
-            for char in bytearray(unicode_text, 'cp1251'):
-                printer.device.write(chr(char))
-        """
+        Default code page values are described on page 8 from Epson's
+        `FAQ about ESC/POS <http://content.epson.de/fileadmin/content/files/RSD/downloads/escpos.pdf>`_
+        transcribed here for convenience:
+
+        +-----------+----------------------------------+
+        | Code Page | Character Code                   |
+        +===========+==================================+
+        | ``0``     | PC437 (USA: Standard Europe)     |
+        +-----------+----------------------------------+
+        | ``1``     | Katana                           |
+        +-----------+----------------------------------+
+        | ``2``     | PC850 (Multilingual)             |
+        +-----------+----------------------------------+
+        | ``3``     | PC860 (Portuguese)               |
+        +-----------+----------------------------------+
+        | ``4``     | PC863 (Canadian-French)          |
+        +-----------+----------------------------------+
+        | ``5``     | PC865 (Nordic)                   |
+        +-----------+----------------------------------+
+        | ``16``    | WPC1252                          |
+        +-----------+----------------------------------+
+        | ``17``    | PC866 (Cyrillic #2)              |
+        +-----------+----------------------------------+
+        | ``18``    | PC852 (Latin 2)                  |
+        +-----------+----------------------------------+
+        | ``19``    | PC858 (Euro)                     |
+        +-----------+----------------------------------+
+        | ``20``    | Thai character code 42           |
+        +-----------+----------------------------------+
+        | ``21``    | Thai character code 11           |
+        +-----------+----------------------------------+
+        | ``22``    | Thai character code 13           |
+        +-----------+----------------------------------+
+        | ``23``    | Thai character code 14           |
+        +-----------+----------------------------------+
+        | ``24``    | Thai character code 16           |
+        +-----------+----------------------------------+
+        | ``25``    | Thai character code 17           |
+        +-----------+----------------------------------+
+        | ``26``    | Thai character code 18           |
+        +-----------+----------------------------------+
+        | ``254``   | User-defined page                |
+        +-----------+----------------------------------+
+        | ``255``   | User-defined page                |
+        +-----------+----------------------------------+
+
+        .. note::
+
+            Be aware of "encoding" attribute versus the code page set.
+            Usually they must match, unless you know what you are doing.
+            For example, if your encoding is "cp850", then the code page
+            set should be "PC850", according to the above table.
+
+            Take a look at the Python documentation for the ``codec``'s
+            module `Standard Encodings <https://docs.python.org/3/library/codecs.html#standard-encodings>`_.
+
+            Also, check you printer's manual for the code page table.
+
+        :param int code_page: The code page to set. This must be an integer
+            randing from 0 to 255, whose meaning depends upon your printer
+            model.
+
+        """  # noqa: E501
         if not 0 <= code_page <= 255:
-            raise ValueError('Number between 0 and 255 expected.')
-        self.device.write('\x1B\x74' + chr(code_page))
-
+            raise ValueError((
+                    'Code page value should be between 0 and 255;'
+                    'got: {!r}'
+                ).format(code_page))
+        self.device.write(b'\x1B\x74' + as_char(code_page))
 
     def set_text_size(self, width, height):
         if (0 <= width <= 7) and (0 <= height <= 7):

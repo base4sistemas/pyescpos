@@ -45,3 +45,19 @@ def test_feature_attribute_columns(printer):
     assert printer.feature.columns.normal == 48
     assert printer.feature.columns.expanded == 24
     assert printer.feature.columns.condensed == 64
+
+
+def test_set_code_page(printer):
+    printer.set_code_page(0)  # min value (0 = PC437)
+    assert b'\x1B\x74\x00' == printer.device.write_buffer
+
+    printer.set_code_page(255)  # max value (255 = User-defined page)
+    assert b'\x1B\x74\xFF' == printer.device.write_buffer
+
+
+def test_set_code_page_value_bound_limits(printer):
+    with pytest.raises(ValueError):
+        assert printer.set_code_page(-1)
+
+    with pytest.raises(ValueError):
+        assert printer.set_code_page(256)
