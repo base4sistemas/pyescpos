@@ -216,8 +216,8 @@ class MP4200TH(GenericESCPOS):
 
     model = _Model(name='Bematech MP-4200 TH', vendor=_VENDOR)
 
-    def __init__(self, device, features={}):
-        super(MP4200TH, self).__init__(device)
+    def __init__(self, device, features={}, **kwargs):
+        super(MP4200TH, self).__init__(device, **kwargs)
         self.hardware_features.update({
                 feature.CUTTER: True,
                 feature.CASHDRAWER_PORTS: True,

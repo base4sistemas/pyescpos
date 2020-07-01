@@ -20,7 +20,8 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import os
+import functools
+import logging
 import sys
 
 from future.utils import python_2_unicode_compatible
@@ -39,22 +40,39 @@ from ..helpers import hexdump
 
 
 DEFAULT_READ_TIMEOUT = 1
-
 DEFAULT_WRITE_TIMEOUT = 1
-
 DEFAULT_PROTOCOL_TIMEOUT = 5
-
 
 RTSCTS = 'RTSCTS'
 DSRDTR = 'DSRDTR'
 XONXOFF = 'XONXOFF'
 
 FLOW_CONTROL_PROTOCOLS = (
-    (RTSCTS, 'Hardware RTS/CTS'),
-    (DSRDTR, 'Hardware DSR/DTR'),
-    (XONXOFF, 'Software XOn/XOff'),)
+        (RTSCTS, 'Hardware RTS/CTS'),
+        (DSRDTR, 'Hardware DSR/DTR'),
+        (XONXOFF, 'Software XOn/XOff'),
+    )
 
 
+logger = logging.getLogger('escpos.conn.serial')
+
+
+def depends_on_pyserial_lib(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        if not _lib_pyserial:
+            raise RuntimeError(
+                    'In order to make serial connections you must install '
+                    'PySerial library. Alternatively you may want to install '
+                    'PyESCPOS using \'pip install pyescpos[serial]\' to '
+                    'automatically install dependencies for serial '
+                    'connections.'
+                )
+        return func(*args, **kwargs)
+    return wrapper
+
+
+@depends_on_pyserial_lib
 def scan_ports():
     """
     Scan for known serial ports available in the underling system.
@@ -67,7 +85,6 @@ def scan_ports():
         ((0, '/dev/ttyS0'), (1, '/dev/ttyS1'), ...)
 
     """
-    _check_lib_pyserial()
     names = []
     for number in range(256):
         try:
@@ -105,11 +122,11 @@ def get_port_number(port_name):
     return None
 
 
+@depends_on_pyserial_lib
 def get_baudrates():
     """
-    Returns supported baud rates in a Django-like choices tuples.
+    Returns supported baud rates in a Django-like choices tuple.
     """
-    _check_lib_pyserial()
     baudrates = []
     s = pyserial.Serial()
     for name, value in s.getSupportedBaudrates():
@@ -117,11 +134,11 @@ def get_baudrates():
     return tuple(baudrates)
 
 
+@depends_on_pyserial_lib
 def get_databits():
     """
-    Returns supported byte sizes in a Django-like choices tuples.
+    Returns supported byte sizes in a Django-like choices tuple.
     """
-    _check_lib_pyserial()
     databits = []
     s = pyserial.Serial()
     for name, value in s.getSupportedByteSizes():
@@ -129,11 +146,11 @@ def get_databits():
     return tuple(databits)
 
 
+@depends_on_pyserial_lib
 def get_stopbits():
     """
-    Returns supported stop bit lengths in a Django-like choices tuples.
+    Returns supported stop bit lengths in a Django-like choices tuple.
     """
-    _check_lib_pyserial()
     stopbits = []
     s = pyserial.Serial()
     for name, value in s.getSupportedStopbits():
@@ -141,11 +158,11 @@ def get_stopbits():
     return tuple(stopbits)
 
 
+@depends_on_pyserial_lib
 def get_parities():
     """
-    Returns supported parities in a Django-like choices tuples.
+    Returns supported parities in a Django-like choices tuple.
     """
-    _check_lib_pyserial()
     parities = []
     s = pyserial.Serial()
     for name, value in s.getSupportedParities():
@@ -155,16 +172,58 @@ def get_parities():
 
 def get_protocols():
     """
-    Returns available protocols in a Django-like choices tuples.
+    Returns available protocols in a Django-like choices tuple.
     """
     return FLOW_CONTROL_PROTOCOLS
 
 
 @python_2_unicode_compatible
 class SerialSettings(object):
-    """
-    Holds serial port configurations.
-    """
+    """Holds serial port configuration."""
+
+    @staticmethod
+    def parse(value):
+        """
+        Constructs an instance of :class:`SerialSettings` from a string
+        representation, that looks like ``/dev/ttyS0:9600,8,1,N,RTSCTS``,
+        describing, in order, the serial port name, baud rate, byte size,
+        stop bits, parity and flow control protocol.
+
+        In cases where protocol is not specified, RTS/CTS (hardware flow
+        control) is assumed.
+
+        Valid string representations are::
+
+            COM1:115000,8,1,E
+            COM1:115000:8:1:E
+            COM4:9600:8:2:O:NONE
+            /dev/ttyS0:9600,8,1,N,RTSCTS
+            /dev/ttyS0,9600,8,1,N
+
+        """
+        keys = [
+                'port', 'baudrate', 'databits', 'stopbits',
+                'parity', 'protocol'
+            ]
+        values = value.replace(',', ':').split(':')
+
+        if len(values) == 5:
+            values.append(RTSCTS)
+
+        if len(keys) != len(values):
+            raise ValueError(
+                    (
+                        'Unknown serial port string format: {!r} (expecting '
+                        'something like "COM1:9600,8,1,N,RTSCTS")'
+                    ).format(value)
+                )
+
+        kwargs = dict(zip(keys, values))
+        kwargs['baudrate'] = int(kwargs['baudrate'])
+        kwargs['databits'] = int(kwargs['databits'])
+        kwargs['stopbits'] = int(kwargs['stopbits'])
+
+        return SerialSettings(**kwargs)
 
     def __init__(self, **kwargs):
         self._port = None
@@ -178,13 +237,13 @@ class SerialSettings(object):
         for key, value in kwargs.items():
             attribute = '_%s' % key
             if not hasattr(self, attribute):
-                raise AttributeError('%s has no attribute \'%s\'' % (
-                        self.__class__.__name__, key,))
+                raise AttributeError('{} has no attribute {!r}'.format(
+                        self.__class__.__name__, key
+                    ))
             setattr(self, attribute, value)
 
         self._portname = ''
         self._fix_port_assignment()
-
 
     def __repr__(self):
         value = '%s(port=%s, baudrate=%s, databits=%s, stopbits=%s, '\
@@ -198,29 +257,24 @@ class SerialSettings(object):
                         self._protocol,)
         return value
 
-
     def __str__(self):
         # eg: "/dev/ttyS0:9600,8,1,N,RTSCTS"
         params = ','.join([
-                self._portname,
-                self._baudrate,
-                self._databits,
-                self._stopbits,
+                str(self._baudrate),
+                str(self._databits),
+                str(self._stopbits),
                 self._parity,
                 self._protocol,
             ])
         return '{}:{}'.format(self._portname, params)
 
-
     @property
     def portname(self):
         return self._portname
 
-
     @property
     def port(self):
         return self._port
-
 
     @port.setter
     def port(self, value):
@@ -234,81 +288,66 @@ class SerialSettings(object):
                 self._portname = name
                 break
         else:
-            raise ValueError('Given port name/number does not exists: '
-                    '%s (%r)' % (value, value,))
-
+            raise ValueError('Serial port not found: {!r}'.format(value))
 
     @property
     def baudrate(self):
         return self._baudrate
 
-
     @baudrate.setter
     def baudrate(self, value):
-        if value not in [v for v,n in get_baudrates()]:
-            raise ValueError('Unsupported baud rate value: %s' % value)
+        if value not in [v for v, n in get_baudrates()]:
+            raise ValueError('Unsupported baud rate value: %r' % value)
         self._baudrate = value
-
 
     @property
     def databits(self):
         return self._databits
 
-
     @databits.setter
     def databits(self, value):
-        if value not in [v for v,n in get_databits()]:
-            raise ValueError('Unsupported byte size value: %s' % value)
+        if value not in [v for v, n in get_databits()]:
+            raise ValueError('Unsupported byte size value: %r' % value)
         self._databits = value
-
 
     @property
     def stopbits(self):
         return self._stopbits
 
-
     @stopbits.setter
     def stopbits(self, value):
-        if value not in [v for v,n in get_stopbits()]:
-            raise ValueError('Unsupported stop bits value: %s' % value)
+        if value not in [v for v, n in get_stopbits()]:
+            raise ValueError('Unsupported stop bits value: %r' % value)
         self._stopbits = value
-
 
     @property
     def parity(self):
         return self._parity
 
-
     @parity.setter
     def parity(self, value):
-        if value not in [v for v,n in get_parities()]:
-            raise ValueError('Unsupported parity value: %s' % value)
+        if value not in [v for v, n in get_parities()]:
+            raise ValueError('Unsupported parity value: %r' % value)
         self._parity = value
-
 
     @property
     def protocol(self):
         return self._protocol
 
-
     @protocol.setter
     def protocol(self, value):
-        if value not in [v for v,n in get_protocols()]:
-            raise ValueError('Unknown protocol: %s' % value)
+        if value not in [v for v, n in get_protocols()]:
+            raise ValueError('Unsupported protocol value: %r' % value)
         self._protocol = value
-
 
     def is_rtscts(self):
         return self.protocol == RTSCTS
 
-
     def is_dsrdtr(self):
         return self.protocol == DSRDTR
 
-
     def is_xonxoff(self):
         return self.protocol == XONXOFF
-
 
     def get_connection(self, **kwargs):
         """Return a serial connection implementation suitable for the specified
@@ -331,14 +370,12 @@ class SerialSettings(object):
             raise RuntimeError('Serial protocol "%s" is not available.' % (
                     self.protocol))
 
-
     def _fix_port_assignment(self):
         """
         The :attr:`port` attribute can be set either by name or by its numeric
         value. This method attempt to fix the semantics of name/number as its
         extremely convenient.
         """
-
         port_name = ''
         port_number = None
 
@@ -357,109 +394,92 @@ class SerialSettings(object):
             self._portname = port_name or ''
 
 
-    @staticmethod
-    def as_from(value):
-        """
-        Constructs an instance of :class:`SerialSettings` from a string
-        representation, that looks like ``/dev/ttyS0:9600,8,1,N,RTSCTS``,
-        describing, in order, the serial port name, baud rate, byte size,
-        stop bits, parity and flow control protocol.
-
-        Valid string representations are (in cases where protocol is not
-        specified, RTS/CTS is assumed)::
-
-            COM1:115000,8,1,E
-            COM1:115000:8:1:E
-            COM4:9600:8:2:O:DSRDTR
-            /dev/ttyS0:9600,8,1,N,RTSCTS
-            /dev/ttyS0,9600,8,1,N
-
-        """
-        keys = ['port','baudrate','databits','stopbits','parity','protocol']
-        values = value.replace(',', ':').split(':')
-
-        if len(values) == 5:
-            values.append(RTSCTS)
-
-        if len(keys) != len(values):
-            raise ValueError('Unknown serial port string format: %s '
-                    '(expecting something like "COM1:9600,8,1,N,RTSCTS")' % (
-                    value,))
-
-        kwargs = dict(zip(keys, values))
-        kwargs['baudrate'] = int(kwargs['baudrate'])
-        kwargs['databits'] = int(kwargs['databits'])
-        kwargs['stopbits'] = int(kwargs['stopbits'])
-
-        return SerialSettings(**kwargs)
-
-
 class SerialConnection(object):
 
-    SETTINGS_EXAMPLE = '/dev/ttyS0:9600,8,1,N,RTSCTS'
+    SETTINGS_EXAMPLE = (
+            '{}:9600,8,1,N,RTSCTS'
+        ).format('COM1' if 'win' in sys.platform else '/dev/ttyS0')
 
+    @classmethod
+    def create(cls, settings_string):
+        """Creates a serial RS232 connection based on a settings string.
+        Calling this method is a shortcut for:
 
-    def __init__(self, settings,
+        .. sourcecode:: python
+
+            settings = SerialSettings.parse('/dev/ttyS0:9200,8,1,N,RTSCTS')
+            conn = settings.get_connection()
+
+        :returns: An instance of a serial connection implementation.
+        :rtype: SerialConnection
+
+        """
+        settings = SerialSettings.parse(settings_string)
+        return settings.get_connection()
+
+    def __init__(
+            self,
+            settings,
             read_timeout=DEFAULT_READ_TIMEOUT,
             write_timeout=DEFAULT_WRITE_TIMEOUT,
             protocol_timeout=DEFAULT_PROTOCOL_TIMEOUT):
-
         super(SerialConnection, self).__init__()
 
-        self.settings = settings
-        """Serial settings as an instance of :class:`SerialSettings`."""
+        self._comport = None
+        # gateway to the serial communications port, an instance of
+        # serial.Serial from the PySerial library
 
-        self.comport = None
-        """The gateway to the serial communications port, usually an
-        instance of ``serial.Serial`` from the **PySerial** library.
-        """
-
-        self.read_timeout = read_timeout
-
-        self.write_timeout = write_timeout
-
-        self.protocol_timeout = protocol_timeout
-
-        self.device_encoding = 'CP850'
-
-        self.hex_dump = True
-
+        self._settings = settings
+        self._read_timeout = read_timeout
+        self._write_timeout = write_timeout
+        self._protocol_timeout = protocol_timeout
 
     def __del__(self):
         if self.comport is not None:
             if self.comport.isOpen():
                 self.comport.close()
 
+    @property
+    def comport(self):
+        return self._comport
+
+    @property
+    def read_timeout(self):
+        return self._read_timeout
+
+    @property
+    def write_time(self):
+        return self._write_time
 
     @property
     def protocol_timeout(self):
         return self._protocol_timeout
 
-
-    @protocol_timeout.setter
-    def protocol_timeout(self, value):
-        self._protocol_timeout = value
-        self._ptimeout = TimeoutHelper(timeout=self._protocol_timeout)
-
-
     def is_clear_to_write(self):
         raise NotImplementedError()
 
-
     def wait_to_write(self):
-        self._ptimeout.set()
-        while self._ptimeout.check():
+        timeout = TimeoutHelper(self.protocol_timeout)
+        while timeout.check():
             if self.is_clear_to_write():
                 break
 
-
     def write(self, data):
-        """Write data to serial port."""
+        """Write data to serial port.
+
+        :param data: Bytes to write.
+        :type data: bytes|bytearray
+        """
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                    'writing to serial port %s:\n%s',
+                    self._settings,
+                    hexdump(data)
+                )
         for chunk in chunks(data, 512):
             self.wait_to_write()
             self.comport.write(chunk)
         self.comport.flush()
-
 
     def read(self):
         """Read data from serial port and returns a ``bytearray``."""
@@ -473,67 +493,33 @@ class SerialConnection(object):
                 data.extend(bytearray(content))
         return data
 
-
+    @depends_on_pyserial_lib
     def catch(self):
-        _check_lib_pyserial()
-
         if self.comport is not None:
             if self.comport.isOpen():
                 self.comport.close()
 
-        factory = _SerialDumper if self.hex_dump else pyserial.Serial
-        port = self.settings.port
-
-        if port is None:
-            port = self.settings.portname
-
-        self.comport = factory(
+        port = self._settings.port or self._settings.portname
+        self._comport = pyserial.Serial(
                 port=port,
-                baudrate=self.settings.baudrate,
-                bytesize=self.settings.databits,
-                stopbits=self.settings.stopbits,
-                parity=self.settings.parity,
-                rtscts=self.settings.is_rtscts(),
-                dsrdtr=self.settings.is_dsrdtr(),
-                xonxoff=self.settings.is_xonxoff(),
-                timeout=self.read_timeout,
-                writeTimeout=self.write_timeout)
+                baudrate=self._settings.baudrate,
+                bytesize=self._settings.databits,
+                stopbits=self._settings.stopbits,
+                parity=self._settings.parity,
+                rtscts=self._settings.is_rtscts(),
+                dsrdtr=self._settings.is_dsrdtr(),
+                xonxoff=self._settings.is_xonxoff(),
+                timeout=self._read_timeout,
+                writeTimeout=self._write_timeout
+            )
 
         if not self.comport.isOpen():
             self.comport.open()
 
-        self.comport.setRTS(level=1)
-        self.comport.setDTR(level=1)
+        self.comport.setRTS(1)
+        self.comport.setDTR(1)
         self.comport.flushInput()
         self.comport.flushOutput()
-
-
-    def unicode_to_device_encoding(self, unicode_string):
-        return unicode_string.encode('utf-8').decode(self.device_encoding)
-
-
-    def unicode_to_bytearray(self, unicode_string, errors='ignore'):
-        device_encoded_string = self.unicode_to_device_encoding(unicode_string)
-        return bytearray(device_encoded_string,
-                encoding=self.device_encoding,
-                errors=errors)
-
-
-    @staticmethod
-    def create(settings_string):
-        """
-        Creates a serial RS232 connection based on a settings string. Calling
-        this method is a shortcut for:
-
-        .. sourcecode:: python
-
-            settings = SerialSettings.as_from('/dev/ttyS0:9200,8,1,N,RTSCTS')
-            conn = settings.get_connection()
-
-        See method :meth:`~escpos.serial.SerialSettings.as_from` for details.
-        """
-        settings = SerialSettings.as_from(settings_string)
-        return settings.get_connection()
 
 
 class RTSCTSConnection(SerialConnection):
@@ -548,38 +534,3 @@ class DSRDTRConnection(SerialConnection):
 
     def is_clear_to_write(self):
         return self.comport.getDSR()
-
-
-if _lib_pyserial:
-    class _SerialDumper(pyserial.Serial):
-        """
-        This class is used as a wrapper for ``pyserial.Serial`` to allow dumping
-        the data that is about to be sent over the serial connection. For example:
-
-        .. sourcecode:: python
-
-            settings = SerialSettings.as_from('/dev/ttyS5:9600,8,1,N')
-            printer = GenericESCPOS(settings.get_device())
-            printer.init()
-            1b 40                                            .@
-
-            printer.text('Hello World!')
-            48 65 6c 6c 6f 20 57 6f 72 6c 64 21              Hello World!
-            0a                                               .
-
-        """
-
-        def write(self, data):
-            if sys.stdout.isatty():
-                sys.stdout.write(hexdump(data))
-                sys.stdout.write(os.linesep)
-            super(_SerialDumper, self).write(data)
-
-
-def _check_lib_pyserial():
-    if not _lib_pyserial:
-        raise RuntimeError(
-                'In order to make serial connections you must install '
-                'PySerial library. Alternatively you may want to install '
-                'PyESCPOS using \'pip install pyescpos[serial]\' to '
-                'automatically install dependencies for serial connections.')

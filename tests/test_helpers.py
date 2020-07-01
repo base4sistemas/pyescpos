@@ -30,7 +30,7 @@ from escpos.helpers import find_implementations
 
 
 def test_chunk():
-    data = 'ABCDEFG'
+    data = b'ABCDEFG'
     chunk_size = 3
     for chunk in chunks(data, chunk_size):
         assert len(chunk) <= chunk_size, (

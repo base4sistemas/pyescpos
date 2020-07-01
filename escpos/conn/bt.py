@@ -20,6 +20,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import functools
 import logging
 import socket
 
@@ -49,9 +50,24 @@ class BluetoothPortDiscoveryError(BluetoothConnectionError):
     pass
 
 
+def depends_on_pybluez_lib(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        if not _lib_bluetooth:
+            raise RuntimeError(
+                    'In order to make bluetooth connections you must install '
+                    'PyBluez library. Alternatively you may want to install '
+                    'PyESCPOS using \'pip install pyescpos[bluetooth]\' to '
+                    'automatically install dependencies for bluetooth '
+                    'connections.'
+                )
+        return func(*args, **kwargs)
+    return wrapper
+
+
+@depends_on_pybluez_lib
 def find_rfcomm_port(address):
 
-    _check_lib_bluetooth()
     services = bluetooth.find_service(address=address)
     if not services:
         raise BluetoothPortDiscoveryError(
@@ -128,13 +144,13 @@ class BluetoothConnection(object):
             self.socket.close()
             self.socket = None
 
+    @depends_on_pybluez_lib
     @backoff(
             max_tries=config.BACKOFF_MAXTRIES,
             delay=config.BACKOFF_DELAY,
             factor=config.BACKOFF_FACTOR,
             exceptions=_RETRY_EXCEPTIONS)
     def catch(self):
-        _check_lib_bluetooth()
         self.socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
         self.socket.connect((self.address, self.port))
 
@@ -159,14 +175,6 @@ class BluetoothConnection(object):
     def read(self):
         try:
             return self.socket.recv()
-        except:  # noqa: E722
+        except Exception:
             logger.exception('read error')
             return None
-
-
-def _check_lib_bluetooth():
-    if not _lib_bluetooth:
-        raise RuntimeError(
-                'In order to make bluetooth connections you must '
-                'install PyBluez library.'
-            )

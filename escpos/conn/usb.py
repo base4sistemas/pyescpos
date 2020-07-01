@@ -20,6 +20,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import functools
 import re
 
 
@@ -35,14 +36,27 @@ except ImportError:
 PRINTER_CLASS = 0x07
 
 
+def depends_on_pyusb_lib(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        if not _lib_usb:
+            raise RuntimeError(
+                    'In order to make USB connections you must install '
+                    'PyUSB library. Alternatively you may want to install '
+                    'PyESCPOS using \'pip install pyescpos[usb]\' to '
+                    'automatically install dependencies for USB connections. '
+                )
+        return func(*args, **kwargs)
+    return wrapper
+
+
 class PrinterFinder(object):
 
     def __init__(self, device_class=PRINTER_CLASS):
         self._device_class = device_class
 
+    @depends_on_pyusb_lib
     def __call__(self, device):
-        _check_lib_usb()
-
         if device.bDeviceClass == self._device_class:
             return True
 
@@ -56,15 +70,14 @@ class PrinterFinder(object):
         return False
 
 
+@depends_on_pyusb_lib
 def find_printers(**kwargs):
-    """
+    """Finds USB devices of class ``07h`` (printer).
 
     :returns: Tuple of ``usb.core.Device`` objects found.
-
     :rtype: tuple
 
     """
-    _check_lib_usb()
     devices = []
     query = usb.core.find(custom_match=PrinterFinder(), **kwargs)
     for result in query:
@@ -77,6 +90,8 @@ def find_printers(**kwargs):
 
 class USBConnection(object):
     """Implements a simple USB connection."""
+
+    SETTINGS_EXAMPLE = '0492:8760,interface=0,ep_out=3,ep_in=0'
 
     RE_VENDOR_PRODUCT = re.compile(
             r'((0x)?(?P<vendor>[0-9a-f]*)):((0x)?(?P<product>[0-9a-f]*))',
@@ -91,7 +106,11 @@ class USBConnection(object):
     @classmethod
     def create(cls, setting):
         """Instantiate a :class:`USBConnection` object based on settings
-        string like ``0492:8760,interface=0,out_ep=3,in_ep=0``.
+        string like ``0492:8760,interface=0,ep_out=3,ep_in=0``.
+
+        Note that those numbers are treated as hexadecimal values, not
+        integer decimals. You may want to prefix them with ``0x`` to be
+        clear, for example, ``0x0492:0x8760,interface=0x01,...``.
         """
         defaults = dict(interface=0, ep_in=0, ep_out=0)
 
@@ -161,8 +180,8 @@ class USBConnection(object):
                 self.ep_out
             ))
 
+    @depends_on_pyusb_lib
     def catch(self):
-        _check_lib_usb()
         self.usbport = usb.core.find(
                 idVendor=self.vendor_id, idProduct=self.product_id)
 
@@ -191,11 +210,3 @@ class USBConnection(object):
 
     def read(self):
         return ''
-
-
-def _check_lib_usb():
-    if not _lib_usb:
-        raise RuntimeError(
-                'In order to make USB connections you must install PyUSB '
-                'library.'
-            )

@@ -515,8 +515,8 @@ class TMT20(GenericESCPOS):
 
     model = _Model(name='Epson TM-T20', vendor=_VENDOR)
 
-    def __init__(self, device, features={}):
-        super(TMT20, self).__init__(device)
+    def __init__(self, device, features={}, **kwargs):
+        super(TMT20, self).__init__(device, **kwargs)
         self.hardware_features.update({
                 feature.CUTTER: True,
                 feature.CASHDRAWER_PORTS: True,

@@ -46,8 +46,8 @@ class CB55C(GenericESCPOS):
 
     model = _Model(name='CB55-C', vendor=_VENDOR)
 
-    def __init__(self, device, features={}):
-        super(CB55C, self).__init__(device)
+    def __init__(self, device, features={}, **kwargs):
+        super(CB55C, self).__init__(device, **kwargs)
         self.hardware_features.update({
                 feature.CUTTER: True,
                 feature.CASHDRAWER_PORTS: True,

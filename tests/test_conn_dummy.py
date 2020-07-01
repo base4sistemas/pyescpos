@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/impl/nitere.py
+# escpos/tests/test_conn_dummy.py
 #
-# Copyright 2015 Base4 Sistemas Ltda ME
+# Copyright 2020 Base4 Sistemas EIRELI
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,21 +20,9 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from ..helpers import _Model
-from .unknown import CB55C
+
+from escpos.conn.dummy import DummyConnection
 
 
-_VENDOR = 'Nitere'
-
-
-class NitereNPDV1020(CB55C):
-    """Alias for **Unknown OEM** :class:`~escpos.impl.unknown.CB55C` model."""
-
-    model = _Model(name='Nitere NPDV-1020', vendor=_VENDOR)
-
-    def __init__(self, device, features={}, **kwargs):
-        super(NitereNPDV1020, self).__init__(
-                device,
-                features=features,
-                **kwargs
-            )
+def test_has_settings_example_attribute():
+    assert hasattr(DummyConnection, 'SETTINGS_EXAMPLE')

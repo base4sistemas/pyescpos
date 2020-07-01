@@ -42,8 +42,8 @@ class ElginGeneric(GenericESCPOS):
 
     model = _Model(name='Generic Elgin', vendor=_VENDOR)
 
-    def __init__(self, device, features={}):
-        super(ElginGeneric, self).__init__(device)
+    def __init__(self, device, features={}, **kwargs):
+        super(ElginGeneric, self).__init__(device, **kwargs)
         self.hardware_features.update({
                 feature.CUTTER: False,
                 feature.CASHDRAWER_PORTS: True,
@@ -57,8 +57,8 @@ class ElginI9(ElginGeneric):
 
     model = _Model(name='Elgin I9', vendor=_VENDOR)
 
-    def __init__(self, device, features={}):
-        super(ElginI9, self).__init__(device)
+    def __init__(self, device, features={}, **kwargs):
+        super(ElginI9, self).__init__(device, **kwargs)
         self.hardware_features.update({feature.CUTTER: True})
         self.hardware_features.update(features)
 
@@ -91,8 +91,8 @@ class ElginI7(ElginI9):
 
     model = _Model(name='Elgin I7', vendor=_VENDOR)
 
-    def __init__(self, device, features={}):
-        super(ElginI7, self).__init__(device)
+    def __init__(self, device, features={}, **kwargs):
+        super(ElginI7, self).__init__(device, **kwargs)
         self.hardware_features.update({feature.CUTTER: False})
         self.hardware_features.update(features)
 
@@ -102,8 +102,8 @@ class ElginRM22(ElginI9):
 
     model = _Model(name='Elgin RM-22', vendor=_VENDOR)
 
-    def __init__(self, device, features={}):
-        super(ElginRM22, self).__init__(device)
+    def __init__(self, device, features={}, **kwargs):
+        super(ElginRM22, self).__init__(device, **kwargs)
         self.hardware_features.update({
                 feature.CUTTER: False,
                 feature.CASHDRAWER_PORTS: False,

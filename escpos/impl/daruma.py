@@ -51,8 +51,8 @@ class DarumaGeneric(GenericESCPOS):
 
     model = _Model(name='Generic Daruma', vendor=_VENDOR)
 
-    def __init__(self, device, features={}):
-        super(DarumaGeneric, self).__init__(device)
+    def __init__(self, device, features={}, **kwargs):
+        super(DarumaGeneric, self).__init__(device, **kwargs)
         self.hardware_features.update({
                 feature.CUTTER: False,
                 feature.CASHDRAWER_PORTS: True,
@@ -184,8 +184,8 @@ class DR700(DarumaGeneric):
 
     model = _Model(name='Daruma DR700', vendor=_VENDOR)
 
-    def __init__(self, device, features={}):
-        super(DR700, self).__init__(device)
+    def __init__(self, device, features={}, **kwargs):
+        super(DR700, self).__init__(device, **kwargs)
         self.hardware_features.update({
                 feature.COLUMNS: feature.Columns(
                         normal=48,
@@ -202,8 +202,8 @@ class DR800(DarumaGeneric):
 
     model = _Model(name='Daruma DR800', vendor=_VENDOR)
 
-    def __init__(self, device, features=None):
-        super(DR800, self).__init__(device)
+    def __init__(self, device, features=None, **kwargs):
+        super(DR800, self).__init__(device, **kwargs)
         self.hardware_features.update({feature.CUTTER: True})
         self.hardware_features.update(features or {})
 

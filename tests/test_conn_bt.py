@@ -62,6 +62,10 @@ class FakeBluetoothSocket(object):
         assert self._connected, 'Connection is closed or has been shutdown'
 
 
+def test_has_settings_example_attribute():
+    assert hasattr(BluetoothConnection, 'SETTINGS_EXAMPLE')
+
+
 @pytest.mark.skipif(
         not _lib_bluetooth,
         reason='PyBluez library is unavailable')

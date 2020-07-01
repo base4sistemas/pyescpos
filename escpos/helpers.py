@@ -24,9 +24,13 @@ import inspect
 import time
 
 from collections import namedtuple
+from itertools import takewhile
 from operator import attrgetter
 
 from builtins import chr
+from builtins import bytes
+
+import six
 from six.moves import zip_longest
 
 from .exceptions import TimeoutException
@@ -81,30 +85,67 @@ class TimeoutHelper(object):
 
 
 def chunks(iterable, size):
-    def chunk_factory(iterable, size):
-        args = [iter(iterable)] * size
-        return zip_longest(*args, fillvalue=None)
-    for chunk in chunk_factory(iterable, size):
-        yield ''.join([e for e in chunk if e is not None])
+    def grouper(n, iterable, fillvalue=None):
+        args = [iter(iterable)] * n
+        return zip_longest(*args, fillvalue=fillvalue)
+
+    for chunk in grouper(size, iterable):
+        data = [i for i in takewhile(lambda e: e is not None, chunk)]
+        yield bytearray(data)
 
 
-def hexdump(data):
+def to_bytes(content, encoding='utf-8', errors='strict'):
+    """Convert a sequence to a bytes type.
+
+    Borrowed from `PySerial <https://github.com/pyserial/pyserial>`_ since
+    it is now optional.
+    """
+    if isinstance(content, bytes):
+        # Python 2: isinstance('', bytes) is True
+        return bytes(content)
+    elif isinstance(content, bytearray):
+        return bytes(content)
+    elif isinstance(content, memoryview):
+        return content.tobytes()
+    elif isinstance(content, six.string_types):
+        return bytes(content.encode(encoding, errors))
+    else:
+        # handle list of integers and bytes (one or more items)
+        # for Python 2 and 3
+        return bytes(bytearray(content))
+
+
+def hexdump(content, encoding='utf-8', errors='strict', eol='\n', panel_gap=2):
+    b_content = to_bytes(content, encoding=encoding, errors=errors)
+    hex_panel, char_panel = hexdump_bytes(b_content)
+    gap = ' ' * panel_gap
+    return eol.join(
+            '{}{}{}'.format(h, gap, c)
+            for h, c in zip(hex_panel, char_panel)
+        )
+
+
+def hexdump_bytes(data, fill_last_line=True):
+    def _hex_values():
+        return ['{:02x}'.format(b) for b in data]
+
+    def _chr_values():
+        return [chr(b) if 32 <= b <= 126 else '.' for b in data]
+
     def _cut(sequence, size):
         for i in range(0, len(sequence), size):
-            yield sequence[i:i+size]
+            yield sequence[i:i + size]
 
-    def _hex(sequence):
-        return ['{0:02x}'.format(b) for b in sequence]
+    hex_panel = [' '.join(line) for line in _cut(_hex_values(), 16)]
+    char_panel = [''.join(line) for line in _cut(_chr_values(), 16)]
 
-    def _chr(sequence):
-        return [chr(b) if 32 <= b <= 126 else '.' for b in sequence]
+    if hex_panel and fill_last_line:
+        hex_panel[-1] = hex_panel[-1] + (' ' * (47 - len(hex_panel[-1])))
 
-    raw_data = map(ord, data)
-    hexpanel = [' '.join(line) for line in _cut(_hex(raw_data), 16)]
-    chrpanel = [''.join(line) for line in _cut(_chr(raw_data), 16)]
-    hexpanel[-1] = hexpanel[-1] + (chr(32) * (47 - len(hexpanel[-1])))
-    chrpanel[-1] = chrpanel[-1] + (chr(32) * (16 - len(chrpanel[-1])))
-    return '\n'.join('{}  {}'.format(h, c) for h, c in zip(hexpanel, chrpanel))
+    if char_panel and fill_last_line:
+        char_panel[-1] = char_panel[-1] + (' ' * (16 - len(char_panel[-1])))
+
+    return hex_panel, char_panel
 
 
 def is_value_in(constants_group, value):
