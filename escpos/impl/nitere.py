@@ -24,13 +24,13 @@ from ..helpers import _Model
 from .unknown import CB55C
 
 
-_VENDOR = 'Nitere'
+VENDOR = 'Nitere'
 
 
 class NitereNPDV1020(CB55C):
     """Alias for **Unknown OEM** :class:`~escpos.impl.unknown.CB55C` model."""
 
-    model = _Model(name='Nitere NPDV-1020', vendor=_VENDOR)
+    model = _Model(name='Nitere NPDV-1020', vendor=VENDOR)
 
     def __init__(self, device, features={}, **kwargs):
         super(NitereNPDV1020, self).__init__(

@@ -23,21 +23,39 @@ from __future__ import unicode_literals
 import re
 import time
 
+import six
 from six.moves import range
 
 from .. import barcode
 from .. import constants
 from .. import feature
 from ..exceptions import CashDrawerException
-from ..helpers import as_char
+from ..helpers import ByteValue
 from ..helpers import is_value_in
 from ..helpers import _Model
 
 
-_VENDOR = 'Seiko-Epson Corporation'
+VENDOR = 'Seiko-Epson Corporation'
 
+FONT_A = b'\x00'
+FONT_B = b'\x01'
+FONT_C = b'\x02'
+FONT_D = b'\x03'
+FONT_E = b'\x04'
+FONT_SPECIAL_A = b'\x61'
+FONT_SPECIAL_B = b'\x62'
 
-_QRCODE_ERROR_CORRECTION_MAP = {
+AVAILABLE_FONTS = (
+        (FONT_A, 'Font A'),
+        (FONT_B, 'Font B'),
+        (FONT_C, 'Font C'),
+        (FONT_D, 'Font D'),
+        (FONT_E, 'Font E'),
+        (FONT_SPECIAL_A, 'Special Font A'),
+        (FONT_SPECIAL_B, 'Special Font B'),
+    )
+
+QRCODE_ERROR_CORRECTION_MAP = {
         barcode.QRCODE_ERROR_CORRECTION_L: b'\x30',  # 48d (~7%, default)
         barcode.QRCODE_ERROR_CORRECTION_M: b'\x31',  # 49d (~15%)
         barcode.QRCODE_ERROR_CORRECTION_Q: b'\x32',  # 50d (~25%)
@@ -45,33 +63,13 @@ _QRCODE_ERROR_CORRECTION_MAP = {
     }
 
 
-_QRCODE_MODULE_SIZE_MAP = {
+QRCODE_MODULE_SIZE_MAP = {
         barcode.QRCODE_MODULE_SIZE_4: b'\x04',
         barcode.QRCODE_MODULE_SIZE_5: b'\x05',
         barcode.QRCODE_MODULE_SIZE_6: b'\x06',
         barcode.QRCODE_MODULE_SIZE_7: b'\x07',
         barcode.QRCODE_MODULE_SIZE_8: b'\x08',
     }
-
-
-def _get_qrcode_error_correction(**kwargs):
-    # adapt from PyESCPOS to Epson's own QRCode ECC level byte value
-    return _QRCODE_ERROR_CORRECTION_MAP.get(
-            kwargs.get(
-                    'qrcode_ecc_level',
-                    barcode.QRCODE_ERROR_CORRECTION_L
-                )
-        )
-
-
-def _get_qrcode_module_size(**kwargs):
-    # adapt from PyESCPOS to Epson's own QRCode module size byte value
-    return _QRCODE_MODULE_SIZE_MAP.get(
-            kwargs.get(
-                    'qrcode_module_size',
-                    barcode.QRCODE_MODULE_SIZE_4
-                )
-        )
 
 
 class GenericESCPOS(object):
@@ -124,7 +122,7 @@ class GenericESCPOS(object):
     hardware_features = None
     """A mapping of hardware features."""
 
-    model = _Model(name='Generic ESC/POS', vendor=_VENDOR)
+    model = _Model(name='Generic ESC/POS', vendor=VENDOR)
     """Basic metadata with vendor and model name."""
 
     encoding = constants.DEFAULT_ENCODING
@@ -256,12 +254,67 @@ class GenericESCPOS(object):
                     'Code page value should be between 0 and 255;'
                     'got: {!r}'
                 ).format(code_page))
-        self.device.write(b'\x1B\x74' + as_char(code_page))
+        self.device.write(b'\x1B\x74' + six.int2byte(code_page))
+
+    def set_font(self, font=FONT_A):
+        """Set font to one of :attr:`AVAILABLE_FONTS`."""
+        valid_fonts = [param for param, value in AVAILABLE_FONTS]
+        if font not in valid_fonts:
+            raise ValueError(
+                    (
+                        'Invalid font: {!r} (valid fonts are {!r})'
+                    ).format(font, valid_fonts))
+        self.device.write(b'\x1B\x4D' + font)  # ESC M <n>
+
+    def set_mode(
+            self,
+            font=FONT_A,
+            emphasized=False,
+            underline=False,
+            expanded=False):
+        """Set font, emphasized mode, underline mode and expanded mode."""
+        commands = []
+        param = ByteValue()
+
+        if font in (FONT_A, FONT_B):
+            if font == FONT_B:
+                param.set_bit(0)
+        else:
+            # set character font using ESC M (after ESC !)
+            commands.append(b'\x1B\x4D' + font)
+
+        if emphasized:
+            param.set_bit(3)
+
+        if underline:
+            # TODO: control underline thickness using ESC -
+            # https://reference.epson-biz.com/modules/ref_escpos/index.php?content_id=24
+            param.set_bit(7)
+
+        if expanded:
+            param.set_bit(4)
+            param.set_bit(5)
+
+        commands.insert(0, b'\x1B\x21' + param.byte)  # ESC !
+
+        for cmd in commands:
+            self.device.write(cmd)
 
     def set_text_size(self, width, height):
+        """Set text size to ``width`` and ``height``.
+
+        :param int width: An integer ranging from 0 to 7 (inclusive) whose
+            meaning is the magnification of the text in horizontal direction,
+            it is, ``0`` for 1x (normal text), ``1`` for 2x, and so on.
+
+        :param int height: An integer ranging from 0 to 7 (inclusive) whose
+            meaning is the magnification of the text in vertical direction,
+            it is, ``0`` for 1x (normal text), ``1`` for 2x, and so on.
+
+        """
         if (0 <= width <= 7) and (0 <= height <= 7):
             size = 16 * width + height
-            self.device.write(b'\x1D\x21' + as_char(size))
+            self.device.write(b'\x1D\x21' + six.int2byte(size))
         else:
             raise ValueError((
                     'Width and height should be between 0 and 7 '
@@ -270,15 +323,47 @@ class GenericESCPOS(object):
                 ).format(width, height))
 
     def set_expanded(self, flag):
-        self.device.write(b'\x1B\x21')
+        """Turns on/off expanded mode. Usually this means a text size of 2x
+        magnification in both horizontal and vertical directions.
+
+        :param bool flag: If ``True`` sets expanded on.
+
+        """
+        param = ByteValue()
+        if flag:
+            # set character size to double width and height
+            param.set_bit(4)  # bits 6, 5, 4 = 0, 0, 1 (x2 width)
+            param.set_bit(0)  # bits 2, 1, 0 = 0, 0, 1 (x2 height)
+        self.device.write(b'\x1D\x21' + param.byte)  # GS !
 
     def set_condensed(self, flag):
-        param = b'\x0F' if flag else b'\x12'  # SI (on), DC2 (off)
-        self.device.write(b'\x1B' + param)
+        """Turns on/off condensed mode by switching between :attr:`FONT_A`
+        (normal) and :attr:`FONT_B` (condensed).
+
+        :param bool flag: If ``True`` sets condensed on.
+
+        """
+        param = FONT_B if flag else FONT_A
+        self.set_font(font=param)
 
     def set_emphasized(self, flag):
+        """Turns on/off emphasized mode. See :meth:`set_double_strike`.
+
+        :param bool flag: If ``True`` sets emphasized on.
+
+        """
         param = b'\x01' if flag else b'\x00'
-        self.device.write(b'\x1B\x45' + param)
+        self.device.write(b'\x1B\x45' + param)  # ESC E
+
+    def set_double_strike(self, flag):
+        """Turns on/off double strike mode. In practice, double strike and
+        emphasized modes produces same results.
+
+        :param bool flag: If ``True`` sets double strike on.
+
+        """
+        param = b'\x01' if flag else b'\x00'
+        self.device.write(b'\x1B\x47' + param)  # ESC G
 
     def ean8(self, data, **kwargs):
         """Render given data as **JAN-8/EAN-8** barcode symbology.
@@ -406,8 +491,8 @@ class GenericESCPOS(object):
 
         commands = [
                 b'\x1D\x28\x6B'  # GS(k
-                + as_char(size_L)
-                + as_char(size_H)
+                + six.int2byte(size_L)
+                + six.int2byte(size_H)
                 + b'\x31'  # cn (49 <=> 0x31 <=> QRCode)
                 + b'\x50'  # fn (80 <=> 0x50 <=> store symbol in memory)
                 + b'\x30'  # m (48 <=> 0x30 <=> literal value)
@@ -447,8 +532,19 @@ class GenericESCPOS(object):
         time.sleep(1)  # sleeps one second for qrcode to be printed
         return self.device.read()
 
-    def cut(self, partial=True):
-        """Trigger cutter to perform partial (default) or full paper cut."""
+    def cut(self, partial=True, feed=0):
+        """Trigger cutter to perform partial (default) or full paper cut.
+
+        :param bool partial: Optional. Indicates a partial (``True``, the
+            default value) or a full cut (``False``).
+
+        :param int feed: Optional. Value from 0 (default) to 255 (inclusive).
+            This value should be multiple of the vertical motion unit, feeding
+            paper "until current position reaches the cutter".
+            For details, visit `GS V <https://www.epson-biz.com/modules/ref_escpos/index.php?content_id=87>`_
+            command documentation.
+
+        """  # noqa: E501
         if self.hardware_features.get(feature.CUTTER, False):
             # TODO: implement hardware alternative for unavailable features
             # For example:
@@ -466,8 +562,9 @@ class GenericESCPOS(object):
             #               'cutter-full-cut': lambda impl: impl.lf(7)
             #           })
             #
-            param = b'\x01' if partial else b'\x00'
-            self.device.write(b'\x1D\x56' + param)
+            func_b = b'\x42' if partial else b'\x41'  # function B
+            feed_n = six.int2byte(feed)
+            self.device.write(b'\x1D\x56' + func_b + feed_n)  # GS V m n
 
     def kick_drawer(self, port=0, **kwargs):
         """Kick drawer connected to the given port.
@@ -513,7 +610,7 @@ class GenericESCPOS(object):
 class TMT20(GenericESCPOS):
     """Epson TM-T20 thermal printer."""
 
-    model = _Model(name='Epson TM-T20', vendor=_VENDOR)
+    model = _Model(name='Epson TM-T20', vendor=VENDOR)
 
     def __init__(self, device, features={}, **kwargs):
         super(TMT20, self).__init__(device, **kwargs)
@@ -524,10 +621,22 @@ class TMT20(GenericESCPOS):
             })
         self.hardware_features.update(features)
 
-    def set_expanded(self, flag):
-        w = 1 if flag else 0  # magnification (Nx)
-        self.set_text_size(w, 0)
 
-    def set_condensed(self, flag):
-        param = b'\x01' if flag else b'\x00'
-        self.device.write(b'\x1B\x21' + param)
+def _get_qrcode_error_correction(**kwargs):
+    # adapt from PyESCPOS to Epson's own QRCode ECC level byte value
+    return QRCODE_ERROR_CORRECTION_MAP.get(
+            kwargs.get(
+                    'qrcode_ecc_level',
+                    barcode.QRCODE_ERROR_CORRECTION_L
+                )
+        )
+
+
+def _get_qrcode_module_size(**kwargs):
+    # adapt from PyESCPOS to Epson's own QRCode module size byte value
+    return QRCODE_MODULE_SIZE_MAP.get(
+            kwargs.get(
+                    'qrcode_module_size',
+                    barcode.QRCODE_MODULE_SIZE_4
+                )
+        )

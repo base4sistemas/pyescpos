@@ -22,10 +22,11 @@ from __future__ import unicode_literals
 
 import time
 
+import six
+
 from .. import asc
 from .. import barcode
 from .. import feature
-from ..helpers import as_char
 from ..helpers import _Model
 from .epson import GenericESCPOS
 
@@ -35,7 +36,7 @@ from .epson import GenericESCPOS
 """
 
 
-_VENDOR = 'Urmet Daruma'
+VENDOR = 'Urmet Daruma'
 
 _QRCODE_MAX_DATA_SIZE = 700
 _QRCODE_ECC_LEVEL_AUTO = 0
@@ -49,7 +50,7 @@ _CODE128_ID = 5
 class DarumaGeneric(GenericESCPOS):
     """Base implementation for Urmet Daruma ESC/POS mini-printers."""
 
-    model = _Model(name='Generic Daruma', vendor=_VENDOR)
+    model = _Model(name='Generic Daruma', vendor=VENDOR)
 
     def __init__(self, device, features={}, **kwargs):
         super(DarumaGeneric, self).__init__(device, **kwargs)
@@ -75,13 +76,13 @@ class DarumaGeneric(GenericESCPOS):
 
     def set_condensed(self, flag):
         param = asc.SI if flag else asc.DC2
-        self.device.write(as_char(param))
+        self.device.write(six.int2byte(param))
 
     def set_emphasized(self, flag):
         param = asc.DC1 if flag else asc.DC3
-        self.device.write(as_char(param))
+        self.device.write(six.int2byte(param))
 
-    def cut(self, partial=True):
+    def cut(self, partial=True, feed=0):
         """Trigger cutter to perform full paper cut.
 
         .. note::
@@ -106,10 +107,10 @@ class DarumaGeneric(GenericESCPOS):
                 kwargs.get('barcode_hri', barcode.BARCODE_HRI_NONE)
             )
 
-        height = as_char(barcode_height)
-        width = as_char(barcode_width)
-        hri = as_char(barcode_hri)
-        param_symbology = as_char(symbology)
+        height = six.int2byte(barcode_height)
+        width = six.int2byte(barcode_width)
+        hri = six.int2byte(barcode_hri)
+        param_symbology = six.int2byte(symbology)
         param_data = data.encode(self.encoding, self.encoding_errors)
 
         command = (
@@ -160,10 +161,10 @@ class DarumaGeneric(GenericESCPOS):
 
         command = (
                 b'\x1B\x81'
-                + as_char(size_H)
-                + as_char(size_L)
-                + as_char(qrcode_module_size)
-                + as_char(qrcode_ecc_level)
+                + six.int2byte(size_H)
+                + six.int2byte(size_L)
+                + six.int2byte(qrcode_module_size)
+                + six.int2byte(qrcode_ecc_level)
                 + qr_data
             )
 
@@ -182,7 +183,7 @@ class DR700(DarumaGeneric):
     Support models DR700 L/H/M and DR700 L-e/H-e.
     """
 
-    model = _Model(name='Daruma DR700', vendor=_VENDOR)
+    model = _Model(name='Daruma DR700', vendor=VENDOR)
 
     def __init__(self, device, features={}, **kwargs):
         super(DR700, self).__init__(device, **kwargs)
@@ -200,7 +201,7 @@ class DR800(DarumaGeneric):
     Support models DR800 L and H.
     """
 
-    model = _Model(name='Daruma DR800', vendor=_VENDOR)
+    model = _Model(name='Daruma DR800', vendor=VENDOR)
 
     def __init__(self, device, features=None, **kwargs):
         super(DR800, self).__init__(device, **kwargs)

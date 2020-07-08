@@ -41,7 +41,6 @@ long_description = read('README.rst')
 install_requires = [
         'future',
         'six',
-        'python-decouple',
     ]
 
 extras_require = {

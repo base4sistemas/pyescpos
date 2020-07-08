@@ -25,7 +25,7 @@ from ..helpers import _Model
 from .epson import GenericESCPOS
 
 
-_VENDOR = 'Unknown OEM'
+VENDOR = 'Unknown OEM'
 
 
 class CB55C(GenericESCPOS):
@@ -44,7 +44,7 @@ class CB55C(GenericESCPOS):
 
     """
 
-    model = _Model(name='CB55-C', vendor=_VENDOR)
+    model = _Model(name='CB55-C', vendor=VENDOR)
 
     def __init__(self, device, features={}, **kwargs):
         super(CB55C, self).__init__(device, **kwargs)

@@ -84,6 +84,30 @@ class TimeoutHelper(object):
         return False
 
 
+class ByteValue(object):
+    """A helper for easy bit handling."""
+
+    def __init__(self):
+        self._int_value = 0
+
+    @property
+    def byte(self):
+        return six.int2byte(self._int_value)
+
+    @property
+    def value(self):
+        return self._int_value
+
+    def get_bit(self, n):
+        return ((self._int_value >> n & 1) != 0)
+
+    def set_bit(self, n):
+        self._int_value |= (1 << n)
+
+    def clear_bit(self, n):
+        self._int_value &= ~(1 << n)
+
+
 def chunks(iterable, size):
     def grouper(n, iterable, fillvalue=None):
         args = [iter(iterable)] * n
@@ -153,13 +177,6 @@ def is_value_in(constants_group, value):
     which in turn, must be a Django-like choices tuple.
     """
     return value in [k for k, v in constants_group]
-
-
-def as_char(i):
-    # Python 2: assert '\x20' == as_char(32)
-    # Python 3: assert b'\x20' == as_char(32)
-    # http://python-future.org/compatible_idioms.html#chr
-    return chr(i).encode('latin-1')
 
 
 def _list_impls():

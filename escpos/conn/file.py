@@ -16,11 +16,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
+
+import logging
+
+from future.utils import python_2_unicode_compatible
+
+from ..helpers import hexdump
 
 
+logger = logging.getLogger('escpos.conn.file')
+
+
+@python_2_unicode_compatible
 class FileConnection(object):
 
     SETTINGS_EXAMPLE = '/dev/usb/lp0'
@@ -34,6 +44,17 @@ class FileConnection(object):
         self.devfile = devfile
         self.auto_flush = auto_flush
         self.open()
+
+    def __repr__(self):
+        content = '{}(devfile={!r}, auto_flush={!r})'.format(
+                self.__class__.__name__,
+                self.devfile,
+                self.auto_flush
+            )
+        return content
+
+    def __str__(self):
+        return self.devfile
 
     def open(self):
         """Open system file."""
@@ -50,6 +71,8 @@ class FileConnection(object):
 
         :param bytes data: arbitrary code to be printed.
         """
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('writing to file %s:\n%s', self, hexdump(data))
         self.device.write(data)
         if self.auto_flush:
             self.flush()

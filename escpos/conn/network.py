@@ -20,14 +20,17 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import logging
 import select
 import socket
 
+from future.utils import python_2_unicode_compatible
 from six.moves import range
 
 from .. import config
 from ..exceptions import NonReadableSocketError
 from ..exceptions import NonWritableSocketError
+from ..helpers import hexdump
 from ..retry import backoff
 
 
@@ -39,6 +42,10 @@ _RETRY_EXCEPTIONS = (
         socket.error,)
 
 
+logger = logging.getLogger('escpos.conn.network')
+
+
+@python_2_unicode_compatible
 class NetworkConnection(object):
     """Implements a potentially resilient network TCP/IP connection."""
 
@@ -72,6 +79,24 @@ class NetworkConnection(object):
 
     def __del__(self):
         self._raw_release()
+
+    def __repr__(self):
+        content = (
+                '{}({!r}, {!r}, address_family={!r}, socket_type={!r}, '
+                'select_timeout={!r}, read_buffer_size={!r})'
+            ).format(
+                self.__class__.__name__,
+                self.host_name,
+                self.port_number,
+                self.address_family,
+                self.socket_type,
+                self.select_timeout,
+                self.read_buffer_size
+            )
+        return content
+
+    def __str__(self):
+        return '{}:{}'.format(self.host_name, self.port_number)
 
     def _raise_with_details(self, message, exctype=RuntimeError):
         raise exctype((
@@ -146,6 +171,8 @@ class NetworkConnection(object):
 
     def _raw_write(self, data):
         self._assert_writable()
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('sending to %s:\n%s', self, hexdump(data))
         totalsent = 0
         while totalsent < len(data):
             sent = self.socket.send(data[totalsent:])

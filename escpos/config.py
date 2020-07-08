@@ -20,24 +20,29 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from decouple import config
+import os
 
 from .constants import BACKOFF_DEFAULT_MAXTRIES
 from .constants import BACKOFF_DEFAULT_DELAY
 from .constants import BACKOFF_DEFAULT_FACTOR
 
+try:
+    from decouple import config
+    _lib_decouple = True
+except ImportError:
+    _lib_decouple = False
 
-BACKOFF_MAXTRIES = config(
-        'ESCPOS_BACKOFF_MAXTRIES',
-        cast=int,
-        default=BACKOFF_DEFAULT_MAXTRIES)
 
-BACKOFF_DELAY = config(
-        'ESCPOS_BACKOFF_DELAY',
-        cast=int,
-        default=BACKOFF_DEFAULT_DELAY)
+def _env(var_name, default):
+    if _lib_decouple:
+        return config(var_name, cast=int, default=default)
+    else:
+        value = os.getenv(var_name)
+        if value is not None:
+            return int(value)
+        return default
 
-BACKOFF_FACTOR = config(
-        'ESCPOS_BACKOFF_FACTOR',
-        cast=int,
-        default=BACKOFF_DEFAULT_FACTOR)
+
+BACKOFF_MAXTRIES = _env('ESCPOS_BACKOFF_MAXTRIES', BACKOFF_DEFAULT_MAXTRIES)
+BACKOFF_DELAY = _env('ESCPOS_BACKOFF_DELAY', BACKOFF_DEFAULT_DELAY)
+BACKOFF_FACTOR = _env('ESCPOS_BACKOFF_FACTOR', BACKOFF_DEFAULT_FACTOR)

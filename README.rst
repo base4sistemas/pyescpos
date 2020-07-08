@@ -44,6 +44,9 @@ Current implementations was tested against following hardware:
 +-------------------------+-------------------+-------------------+-----------------------------------------+
 | Manufacturer            | Models            | Firmware Versions | Notes                                   |
 +=========================+===================+===================+=========================================+
+| `Bematech S/A`_         | MP-2800 TH        | 2.2.1BQL          |                                         |
+|                         |                   |                   |                                         |
++-------------------------+-------------------+-------------------+-----------------------------------------+
 | `Bematech S/A`_         | MP-4200 TH        | 1.3, 1.6          |                                         |
 |                         |                   |                   |                                         |
 +-------------------------+-------------------+-------------------+-----------------------------------------+
@@ -86,6 +89,7 @@ You can get a list of all available implementations with the following snippet:
 
 Which produces an output similar to::
 
+    Bematech MP-2800 TH...... escpos.impl.bematech.MP2800TH
     Bematech MP-4200 TH...... escpos.impl.bematech.MP4200TH
     CB55-C................... escpos.impl.unknown.CB55C
     Daruma DR700............. escpos.impl.daruma.DR700
@@ -282,8 +286,10 @@ parameters through environment variables (or files):
 * ``ESCPOS_BACKOFF_FACTOR`` (int ``> 1``, defaults to ``2``) Multiply factor
   in which delay will be increased each retry.
 
-This library uses `python-decouple`_ to grab those values from the environment
-or files, depending on how you have configured ``decouple``.
+This library may use `python-decouple`_ if available to grab those
+configuration values from environment variables or from a settings file,
+depending on how you have configured ``decouple``. If not, it falls back to
+standard lib ``os.getenv``.
 
 
 More Information

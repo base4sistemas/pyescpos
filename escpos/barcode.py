@@ -20,9 +20,9 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import six
 from six.moves import range
 
-from .helpers import as_char
 from .helpers import is_value_in
 
 """Barcode normalization parameters/values.
@@ -178,7 +178,7 @@ def gs_k_barcode_configure(**kwargs):
     commands = []
 
     if 'barcode_height' in kwargs:
-        barcode_height = as_char(kwargs.get('barcode_height'))
+        barcode_height = six.int2byte(kwargs.get('barcode_height'))
         commands.append(b'\x1D\x68' + barcode_height)
 
     if 'barcode_width' in kwargs:
@@ -189,7 +189,7 @@ def gs_k_barcode_configure(**kwargs):
                 BARCODE_QUADRUPLE_WIDTH: 4,
             }
         barcode_width = gs_k_widths.get(kwargs.get('barcode_width'))
-        commands.append(b'\x1D\x77' + as_char(barcode_width))
+        commands.append(b'\x1D\x77' + six.int2byte(barcode_width))
 
     if 'barcode_hri' in kwargs:
         values = {
@@ -200,7 +200,7 @@ def gs_k_barcode_configure(**kwargs):
                 BARCODE_HRI_BOTH: 3,
             }
         barcode_hri = values.get(kwargs.get('barcode_hri'))
-        commands.append(b'\x1D\x48' + as_char(barcode_hri))
+        commands.append(b'\x1D\x48' + six.int2byte(barcode_hri))
 
     return commands
 
@@ -243,7 +243,7 @@ def gs_k_barcode(symbology, data, **kwargs):
         commands.append(
                 b'\x1D\x6B'
                 + symbology
-                + as_char(size)
+                + six.int2byte(size)
                 + data
                 + b'\x00'
             )

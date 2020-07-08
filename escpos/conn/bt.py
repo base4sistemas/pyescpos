@@ -24,6 +24,8 @@ import functools
 import logging
 import socket
 
+from future.utils import python_2_unicode_compatible
+
 try:
     import bluetooth
     _lib_bluetooth = True
@@ -36,6 +38,7 @@ except ImportError:
     _RETRY_EXCEPTIONS = ()
 
 from .. import config
+from ..helpers import hexdump
 from ..retry import backoff
 
 
@@ -83,6 +86,7 @@ def find_rfcomm_port(address):
         )
 
 
+@python_2_unicode_compatible
 class BluetoothConnection(object):
     """Implements a basic bluetooth RFCOMM communication façade."""
 
@@ -133,6 +137,17 @@ class BluetoothConnection(object):
         self.address = address
         self.port = port
 
+    def __repr__(self):
+        content = '{}({!r}, port={!r})'.format(
+                self.__class__.__name__,
+                self.address,
+                self.port
+            )
+        return content
+
+    def __str__(self):
+        return '{}/{}'.format(self.address, self.port)
+
     @backoff(
             max_tries=config.BACKOFF_MAXTRIES,
             delay=config.BACKOFF_DELAY,
@@ -160,6 +175,8 @@ class BluetoothConnection(object):
             factor=config.BACKOFF_FACTOR,
             exceptions=_RETRY_EXCEPTIONS)
     def write(self, data):
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('writing to bluetooth %s:\n%s', self, hexdump(data))
         totalsent = 0
         while totalsent < len(data):
             sent = self.socket.send(data[totalsent:])

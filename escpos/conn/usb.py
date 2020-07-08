@@ -21,8 +21,12 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import functools
+import logging
 import re
 
+from future.utils import python_2_unicode_compatible
+
+from ..helpers import hexdump
 
 try:
     import usb.core
@@ -34,6 +38,9 @@ except ImportError:
 
 
 PRINTER_CLASS = 0x07
+
+
+logger = logging.getLogger('escpos.conn.usb')
 
 
 def depends_on_pyusb_lib(func):
@@ -80,14 +87,16 @@ def find_printers(**kwargs):
     """
     devices = []
     query = usb.core.find(custom_match=PrinterFinder(), **kwargs)
-    for result in query:
-        if isinstance(result, usb.core.Device):
-            devices.append(result)
-        if isinstance(result, usb.core.Configuration):
-            devices.append(result.device)
+    if query is not None:
+        for result in query:
+            if isinstance(result, usb.core.Device):
+                devices.append(result)
+            if isinstance(result, usb.core.Configuration):
+                devices.append(result.device)
     return tuple(devices)
 
 
+@python_2_unicode_compatible
 class USBConnection(object):
     """Implements a simple USB connection."""
 
@@ -155,9 +164,25 @@ class USBConnection(object):
     def __repr__(self):
         content = (
                 '{}(0x{:04x}, 0x{:04x}, '
-                'interface=0x{:x}, ep_in=0x{:x}, ep_out=0x{:x})'
+                'interface=0x{:x}, ep_in=0x{:x}, ep_out=0x{:x}, '
+                'timeout={!r})'
             ).format(
                 self.__class__.__name__,
+                self.vendor_id,
+                self.product_id,
+                self.interface,
+                self.ep_in,
+                self.ep_out,
+                self.timeout
+            )
+        return content
+
+    def __str__(self):
+        # eg: "0x0492:0x8760,interface=0x0,ep_out=0x3,ep_in=0x0"
+        content = (
+                '0x{:04x}:0x{:04x},interface=0x{:x},ep_in==0x{:x},'
+                'ep_out=0x{:x}'
+            ).format(
                 self.vendor_id,
                 self.product_id,
                 self.interface,
@@ -206,6 +231,8 @@ class USBConnection(object):
             self._raise_with_details(msg, exctype=usb.core.USBError)
 
     def write(self, data):
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('writing to USB port %s:\n%s', self, hexdump(data))
         self.usbport.write(self.ep_out, data, timeout=self.timeout)
 
     def read(self):

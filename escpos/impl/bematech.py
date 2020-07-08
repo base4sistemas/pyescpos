@@ -22,15 +22,15 @@ from __future__ import unicode_literals
 
 import time
 
+import six
 from six.moves import range
 
+from . import epson
 from .. import barcode
 from .. import feature
 from ..constants import CASHDRAWER_DEFAULT_DURATION
 from ..exceptions import CashDrawerException
-from ..helpers import as_char
 from ..helpers import _Model
-from .epson import GenericESCPOS
 
 """
 `Bematech S.A. <http://www.bematechus.com/>`_ ESC/POS printer implementation
@@ -42,7 +42,7 @@ although looks like some sort of a derivative work.
 """
 
 
-_VENDOR = 'Bematech S/A'
+VENDOR = 'Bematech S/A'
 
 
 _CASHDRAWER_DURATION_MIN = 50
@@ -93,7 +93,7 @@ class _ESCBematech(_CommandSet):
     def _barcode_configure(self, **kwargs):
         if 'barcode_height' in kwargs:
             barcode_height = kwargs.get('barcode_height')
-            self._impl.device.write(b'\x1D\x68' + as_char(barcode_height))
+            self._impl.device.write(b'\x1D\x68' + six.int2byte(barcode_height))
 
         if 'barcode_width' in kwargs:
             widths = {
@@ -102,7 +102,7 @@ class _ESCBematech(_CommandSet):
                     barcode.BARCODE_QUADRUPLE_WIDTH: 4,
                 }
             barcode_width = widths.get(kwargs.get('barcode_width'))
-            self._impl.device.write(b'\x1D\x77' + as_char(barcode_width))
+            self._impl.device.write(b'\x1D\x77' + six.int2byte(barcode_width))
 
         if 'barcode_hri' in kwargs:
             values = {
@@ -112,7 +112,7 @@ class _ESCBematech(_CommandSet):
                     barcode.BARCODE_HRI_BOTH: 3,
                 }
             barcode_hri = values.get(kwargs.get('barcode_hri'))
-            self._impl.device.write(b'\x1D\x48' + as_char(barcode_hri))
+            self._impl.device.write(b'\x1D\x48' + six.int2byte(barcode_hri))
 
     def _barcode_render(self, command):
         self._impl.device.write(command)
@@ -122,7 +122,7 @@ class _ESCBematech(_CommandSet):
     def code128(self, data, **kwargs):
         self._barcode_configure(**kwargs)
         bar_data = data.encode(self.encoding, self.encoding_errors)
-        size = as_char(len(bar_data))
+        size = six.int2byte(len(bar_data))
         return self._barcode_render(b'\x1D\x6B\x49' + size + bar_data)
 
     def qrcode(self, data, **kwargs):
@@ -155,12 +155,12 @@ class _ESCBematech(_CommandSet):
 
         command = (
                 b'\x1D\x6B\x51'
-                + as_char(_qr_size_param_0)
-                + as_char(_qr_size_param_1)
-                + as_char(_qr_size_param_2)
-                + as_char(_qr_size_param_3)
-                + as_char(size_L)
-                + as_char(size_H)
+                + six.int2byte(_qr_size_param_0)
+                + six.int2byte(_qr_size_param_1)
+                + six.int2byte(_qr_size_param_2)
+                + six.int2byte(_qr_size_param_3)
+                + six.int2byte(size_L)
+                + six.int2byte(size_H)
                 + qr_data
             )
 
@@ -194,11 +194,11 @@ class _ESCBematech(_CommandSet):
 
         if port == 0:
             # activate cash drawer #1 (ESC 76h)
-            self._impl.device.write(b'\x1B\x76' + as_char(duration))
+            self._impl.device.write(b'\x1B\x76' + six.int2byte(duration))
 
         elif port == 1:
             # activate cash drawer #2 (ESC 80h)
-            self._impl.device.write(b'\x1B\x80' + as_char(duration))
+            self._impl.device.write(b'\x1B\x80' + six.int2byte(duration))
 
         else:
             raise CashDrawerException((
@@ -207,14 +207,14 @@ class _ESCBematech(_CommandSet):
                 ).format(port))
 
 
-class MP4200TH(GenericESCPOS):
+class MP4200TH(epson.GenericESCPOS):
     """
     Implementation for the Bematech MP-4200 TH POS Printer based on a dual
     command set, ESC/POS and ESC/Bematech, with automatic switching between
     command sets depending on the operation that needs to be performed.
     """
 
-    model = _Model(name='Bematech MP-4200 TH', vendor=_VENDOR)
+    model = _Model(name='Bematech MP-4200 TH', vendor=VENDOR)
 
     def __init__(self, device, features={}, **kwargs):
         super(MP4200TH, self).__init__(device, **kwargs)
@@ -249,3 +249,24 @@ class MP4200TH(GenericESCPOS):
 
     def _kick_drawer_impl(self, port=0, **kwargs):
         return self._escbema.kick_drawer(port=port, **kwargs)
+
+
+class MP2800TH(epson.TMT20):
+    """Implementation for Bematech MP-2800 TH thermal mini-printer."""
+
+    model = _Model(name='Bematech MP-2800 TH', vendor=VENDOR)
+
+    def __init__(self, device, features={}, **kwargs):
+        super(MP2800TH, self).__init__(device, **kwargs)
+        self.hardware_features.update({
+                feature.CUTTER: True,
+                feature.CASHDRAWER_PORTS: True,
+                feature.CASHDRAWER_AVAILABLE_PORTS: 1,
+                feature.PORTABLE: False,
+                feature.COLUMNS: feature.Columns(
+                        normal=48,
+                        expanded=24,
+                        condensed=64
+                    ),
+            })
+        self.hardware_features.update(features)

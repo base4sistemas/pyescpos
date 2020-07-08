@@ -20,9 +20,10 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import six
+
 from .. import feature
 from ..constants import CASHDRAWER_DEFAULT_DURATION
-from ..helpers import as_char
 from ..helpers import _Model
 from .epson import GenericESCPOS
 
@@ -32,7 +33,7 @@ from .epson import GenericESCPOS
 """
 
 
-_VENDOR = 'Elgin S/A'
+VENDOR = 'Elgin S/A'
 
 
 class ElginGeneric(GenericESCPOS):
@@ -40,7 +41,7 @@ class ElginGeneric(GenericESCPOS):
     Base implementation for Elgin ESC/POS mini-printers.
     """
 
-    model = _Model(name='Generic Elgin', vendor=_VENDOR)
+    model = _Model(name='Generic Elgin', vendor=VENDOR)
 
     def __init__(self, device, features={}, **kwargs):
         super(ElginGeneric, self).__init__(device, **kwargs)
@@ -55,7 +56,7 @@ class ElginGeneric(GenericESCPOS):
 class ElginI9(ElginGeneric):
     """Implementation for Elgin i9 thermal mini-printer."""
 
-    model = _Model(name='Elgin I9', vendor=_VENDOR)
+    model = _Model(name='Elgin I9', vendor=VENDOR)
 
     def __init__(self, device, features={}, **kwargs):
         super(ElginI9, self).__init__(device, **kwargs)
@@ -65,12 +66,6 @@ class ElginI9(ElginGeneric):
     def set_expanded(self, flag):
         w = 1 if flag else 0  # magnification (Nx)
         self.set_text_size(w, 0)
-
-    def set_condensed(self, flag):
-        # 00h = character font A (12x24, normal)
-        # 01h = character font B (9x17, condensed)
-        param = b'\x01' if flag else b'\x00'
-        self.device.write(b'\x1B\x4D' + param)
 
     def _kick_drawer_impl(self, port=0, **kwargs):
         # param 'm' 0x00 or 0x30 (0, 48) for pin 2
@@ -82,14 +77,14 @@ class ElginI9(ElginGeneric):
         # and 255, if t1 is a very low value the drawer may not be kicked!
         duration = kwargs.get('duration', CASHDRAWER_DEFAULT_DURATION)
         t1 = kwargs.get('t1', b'\x20')  # 32ms (t1 should be less than t2) [1]
-        t2 = kwargs.get('t2', None) or as_char(ord(t1) + duration)
+        t2 = kwargs.get('t2', None) or six.int2byte(ord(t1) + duration)
         self.device.write(b'\x1B\x70' + pin + t1 + t2)
 
 
 class ElginI7(ElginI9):
     """Implementation for Elgin i7 thermal mini-printer."""
 
-    model = _Model(name='Elgin I7', vendor=_VENDOR)
+    model = _Model(name='Elgin I7', vendor=VENDOR)
 
     def __init__(self, device, features={}, **kwargs):
         super(ElginI7, self).__init__(device, **kwargs)
@@ -100,7 +95,7 @@ class ElginI7(ElginI9):
 class ElginRM22(ElginI9):
     """Implementation for Elgin RM-22 portable thermal printer."""
 
-    model = _Model(name='Elgin RM-22', vendor=_VENDOR)
+    model = _Model(name='Elgin RM-22', vendor=VENDOR)
 
     def __init__(self, device, features={}, **kwargs):
         super(ElginRM22, self).__init__(device, **kwargs)

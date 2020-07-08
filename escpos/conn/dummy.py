@@ -16,6 +16,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
+
+import logging
+
+from ..helpers import hexdump
+
+
+logger = logging.getLogger('escpos.conn.dummy')
 
 
 class DummyConnection(object):
@@ -28,38 +38,33 @@ class DummyConnection(object):
 
     SETTINGS_EXAMPLE = None
 
-
     @classmethod
     def create(cls, settings):
         return cls()
 
-
     def __init__(self, *args, **kwargs):
         super(DummyConnection, self).__init__()
         self._output_list = []
-
 
     def write(self, data):
         """Print any command sent in raw format.
 
         :param str data: Arbitrary code to be printed.
         """
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug('writing to %r:\n%s', self, hexdump(data))
         self._output_list.append(data)
-
 
     @property
     def output(self):
         """Get the data that was sent to this printer."""
         return b''.join(self._output_list)
 
-
     def close(self):
         pass
 
-
     def catch(self):
         pass
-
 
     def read(self):
         pass

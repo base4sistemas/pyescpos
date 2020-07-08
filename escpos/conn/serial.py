@@ -387,8 +387,10 @@ class SerialSettings(object):
                 port_name = self._port
                 port_number = get_port_number(port_name)
             else:
-                raise ValueError('Cannot assign port name/number '
-                        'based on port assignment type %r' % self._port)
+                raise ValueError(
+                        'Cannot assign port name/number '
+                        'based on port assignment type %r' % self._port
+                    )
 
             self._port = port_number
             self._portname = port_name or ''
