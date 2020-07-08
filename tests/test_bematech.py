@@ -22,13 +22,12 @@ from __future__ import unicode_literals
 
 import pytest
 
-from builtins import chr
+import six
 
 from escpos import feature
 from escpos.barcode import BARCODE_NORMAL_WIDTH
 from escpos.barcode import BARCODE_HRI_BOTTOM
 from escpos.exceptions import CashDrawerException
-from escpos.helpers import as_char
 from escpos.impl.bematech import MP4200TH
 
 # TODO: Implement tests for inherited methods so we can detect when changes
@@ -119,8 +118,8 @@ def test_qrcode(printer):
     expected = (
             b'\x1D\x6B\x51'  # QRCode command
             + b'\x03\x08\x08\x01'  # unknown parameter values
-            + as_char(size_L)  # LO data length
-            + as_char(size_H)  # HI data length
+            + six.int2byte(size_L)  # LO data length
+            + six.int2byte(size_H)  # HI data length
             + data.encode(printer.encoding, printer.encoding_errors)
         )
 
