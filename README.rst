@@ -2,6 +2,10 @@
 PyESCPOS
 ========
 
+.. image:: https://travis-ci.org/base4sistemas/pyescpos.svg?branch=master
+    :target: https://travis-ci.org/base4sistemas/pyescpos
+    :alt: Build status
+
 .. image:: https://img.shields.io/pypi/status/pyescpos.svg
     :target: https://pypi.python.org/pypi/pyescpos/
     :alt: Development status

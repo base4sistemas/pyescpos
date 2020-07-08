@@ -32,4 +32,4 @@ clean:
 	find . -name '*.pyc' -delete -print
 
 test: clean
-	py.test
+	pytest
