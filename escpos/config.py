@@ -22,7 +22,7 @@ from __future__ import absolute_import
 import logging
 import os
 
-from ConfigParser import SafeConfigParser
+from configparser import SafeConfigParser
 from collections import namedtuple
 
 from . import constants
