@@ -23,6 +23,7 @@ import select
 import socket
 
 from six.moves import range
+from six import text_type
 
 from .. import config
 from ..exceptions import NonReadableSocketError
@@ -149,6 +150,8 @@ class NetworkConnection(object):
 
     def _raw_write(self, data):
         self._assert_writable()
+        if isinstance(data, text_type):
+            data = data.encode()
         totalsent = 0
         while totalsent < len(data):
             sent = self.socket.send(data[totalsent:])
