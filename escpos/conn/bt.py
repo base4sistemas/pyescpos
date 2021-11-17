@@ -86,6 +86,11 @@ def find_rfcomm_port(address):
         )
 
 
+def _bt_exception_handler(ex):
+    # Retry for any expected exception
+    return isinstance(ex, _RETRY_EXCEPTIONS)
+
+
 @python_2_unicode_compatible
 class BluetoothConnection(object):
     """Implements a basic bluetooth RFCOMM communication façade."""
@@ -152,7 +157,7 @@ class BluetoothConnection(object):
             max_tries=config.BACKOFF_MAXTRIES,
             delay=config.BACKOFF_DELAY,
             factor=config.BACKOFF_FACTOR,
-            exceptions=_RETRY_EXCEPTIONS)
+            exception_handler=_bt_exception_handler)
     def release(self):
         if self.socket is not None:
             self.socket.shutdown(socket.SHUT_RDWR)
@@ -164,7 +169,7 @@ class BluetoothConnection(object):
             max_tries=config.BACKOFF_MAXTRIES,
             delay=config.BACKOFF_DELAY,
             factor=config.BACKOFF_FACTOR,
-            exceptions=_RETRY_EXCEPTIONS)
+            exception_handler=_bt_exception_handler)
     def catch(self):
         self.socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
         self.socket.connect((self.address, self.port))
@@ -173,7 +178,7 @@ class BluetoothConnection(object):
             max_tries=config.BACKOFF_MAXTRIES,
             delay=config.BACKOFF_DELAY,
             factor=config.BACKOFF_FACTOR,
-            exceptions=_RETRY_EXCEPTIONS)
+            exception_handler=_bt_exception_handler)
     def write(self, data):
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('writing to bluetooth %s:\n%s', self, hexdump(data))
@@ -188,7 +193,7 @@ class BluetoothConnection(object):
             max_tries=config.BACKOFF_MAXTRIES,
             delay=config.BACKOFF_DELAY,
             factor=config.BACKOFF_FACTOR,
-            exceptions=_RETRY_EXCEPTIONS)
+            exception_handler=_bt_exception_handler)
     def read(self):
         try:
             return self.socket.recv()

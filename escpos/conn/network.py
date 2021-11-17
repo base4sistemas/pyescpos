@@ -20,7 +20,9 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import errno
 import logging
+import os
 import select
 import socket
 
@@ -39,7 +41,38 @@ DEFAULT_READ_BUFSIZE = 4096
 _RETRY_EXCEPTIONS = (
         NonReadableSocketError,
         NonWritableSocketError,
-        socket.error,)
+        socket.error,
+    )
+
+
+def _network_exception_handler(ex):
+    # Retry for any expected exception
+    return isinstance(ex, _RETRY_EXCEPTIONS)
+
+
+def _is_socket_error_exception(ex):
+    # Test for broken pipe (EPIPE), transport endpoint not connected (ENOTCONN)
+    # or connection reset by peer (ECONNRESET)
+    flag = (
+            isinstance(ex, socket.error)
+            and ex.errno in (
+                    errno.EPIPE,
+                    errno.ENOTCONN,
+                    errno.ECONNRESET
+                )
+        )
+    return flag
+
+
+def _network_exception_handler_for_write(ex):
+    # Deals with very specific socket errors upon write operations
+    if _is_socket_error_exception(ex):
+        logger.debug('caught %r: %s', ex.errno, os.strerror(ex.errno))
+        return True  # retry
+    else:
+        # not a specific socket error, retry for other expected
+        # exceptions if its is the case
+        return isinstance(ex, _RETRY_EXCEPTIONS)
 
 
 logger = logging.getLogger('escpos.conn.network')
@@ -157,14 +190,22 @@ class NetworkConnection(object):
 
     def _raw_release(self):
         if self.socket is not None:
-            self.socket.shutdown(socket.SHUT_RDWR)
-            self.socket.close()
+            try:
+                self.socket.shutdown(socket.SHUT_RDWR)
+            except:  # noqa
+                pass
+
+            try:
+                self.socket.close()
+            except:  # noqa
+                pass
+
             self.socket = None
 
     def _raw_catch(self):
-        # [!] Constant socket.TCP_NODELAY disable Nagle's algorithm so that
-        #     even small TCP packets will be sent immediately.
-        #     https://en.wikipedia.org/wiki/Nagle's_algorithm
+        # Constant socket.TCP_NODELAY disables Nagle's algorithm so that even
+        # small TCP packets will be sent immediately.
+        # See: https://en.wikipedia.org/wiki/Nagle's_algorithm
         self.socket = socket.socket(self.address_family, self.socket_type)
         self.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         self.socket.connect((self.host_name, self.port_number))
@@ -187,34 +228,52 @@ class NetworkConnection(object):
         except:  # noqa: E722
             return None
 
-    @backoff(
-            max_tries=config.BACKOFF_MAXTRIES,
-            delay=config.BACKOFF_DELAY,
-            factor=config.BACKOFF_FACTOR,
-            exceptions=_RETRY_EXCEPTIONS)
+    def _before_delay_handler_for_write(self, ex):
+        if _is_socket_error_exception(ex):
+            self._raw_release()
+
+    def _after_delay_handler_for_write(self, ex):
+        if _is_socket_error_exception(ex):
+            self._raw_catch()
+
     def release(self):
-        return self._raw_release()
+        @backoff(
+                max_tries=config.BACKOFF_MAXTRIES,
+                delay=config.BACKOFF_DELAY,
+                factor=config.BACKOFF_FACTOR,
+                exception_handler=_network_exception_handler)
+        def _release():
+            return self._raw_release()
+        return _release()
 
-    @backoff(
-            max_tries=config.BACKOFF_MAXTRIES,
-            delay=config.BACKOFF_DELAY,
-            factor=config.BACKOFF_FACTOR,
-            exceptions=_RETRY_EXCEPTIONS)
     def catch(self):
-        return self._raw_catch()
+        @backoff(
+                max_tries=config.BACKOFF_MAXTRIES,
+                delay=config.BACKOFF_DELAY,
+                factor=config.BACKOFF_FACTOR,
+                exception_handler=_network_exception_handler)
+        def _catch():
+            return self._raw_catch()
+        return _catch()
 
-    @backoff(
-            max_tries=config.BACKOFF_MAXTRIES,
-            delay=config.BACKOFF_DELAY,
-            factor=config.BACKOFF_FACTOR,
-            exceptions=_RETRY_EXCEPTIONS)
     def write(self, data):
-        return self._raw_write(data)
+        @backoff(
+                max_tries=config.BACKOFF_MAXTRIES,
+                delay=config.BACKOFF_DELAY,
+                factor=config.BACKOFF_FACTOR,
+                exception_handler=_network_exception_handler_for_write,
+                before_delay_handler=self._before_delay_handler_for_write,
+                after_delay_handler=self._after_delay_handler_for_write)
+        def _write():
+            return self._raw_write(data)
+        return _write()
 
-    @backoff(
-            max_tries=config.BACKOFF_MAXTRIES,
-            delay=config.BACKOFF_DELAY,
-            factor=config.BACKOFF_FACTOR,
-            exceptions=_RETRY_EXCEPTIONS)
     def read(self):
-        return self._raw_read()
+        @backoff(
+                max_tries=config.BACKOFF_MAXTRIES,
+                delay=config.BACKOFF_DELAY,
+                factor=config.BACKOFF_FACTOR,
+                exception_handler=_network_exception_handler)
+        def _read():
+            return self._raw_read()
+        return _read()

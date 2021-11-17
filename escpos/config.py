@@ -27,7 +27,7 @@ from .constants import BACKOFF_DEFAULT_DELAY
 from .constants import BACKOFF_DEFAULT_FACTOR
 
 try:
-    from decouple import config
+    from decouple import config as decouple_config
     _lib_decouple = True
 except ImportError:
     _lib_decouple = False
@@ -35,12 +35,10 @@ except ImportError:
 
 def _env(var_name, default):
     if _lib_decouple:
-        return config(var_name, cast=int, default=default)
+        return decouple_config(var_name, cast=int, default=default)
     else:
         value = os.getenv(var_name)
-        if value is not None:
-            return int(value)
-        return default
+        return default if value is None else int(value)
 
 
 BACKOFF_MAXTRIES = _env('ESCPOS_BACKOFF_MAXTRIES', BACKOFF_DEFAULT_MAXTRIES)

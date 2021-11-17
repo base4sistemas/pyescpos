@@ -29,13 +29,28 @@ from . import constants
 logger = logging.getLogger('escpos.retry')
 
 
+def always_retry(e):
+    """
+    A default exception handler that will always return ``True`` no matter
+    what exception ``e`` is.
+    """
+    return True
+
+
+def noop(e):
+    pass
+
+
 def backoff(
         max_tries=constants.BACKOFF_DEFAULT_MAXTRIES,
         delay=constants.BACKOFF_DEFAULT_DELAY,
         factor=constants.BACKOFF_DEFAULT_FACTOR,
-        exceptions=None):
-    """Implements an exponential backoff decorator which will retry decorated
-    function upon given exceptions. This implementation is based on
+        exception_handler=always_retry,
+        before_delay_handler=noop,
+        after_delay_handler=noop):
+    """
+    Implements an exponential backoff decorator which will retry if the
+    exception handler returns ``True``. This implementation is based on
     `Retry <https://wiki.python.org/moin/PythonDecoratorLibrary#Retry>`_ from
     the *Python Decorator Library*.
 
@@ -49,9 +64,21 @@ def backoff(
         the next retry. Defaults to
         :const:`~escpos.constants.BACKOFF_DEFAULT_FACTOR`.
 
-    :param exceptions: Tuple of exception types to catch that triggers retry.
-        Any exception not listed will break the decorator and retry routines
-        will not run.
+    :param exception_handler: Optional callable. Back off algorithm will call
+        this handler upon any exception that happens in the decorated function.
+        This handler can analyze the exception and decide to retry by returning
+        a truthy value or to give up by returning a falsy value. The default
+        will :func:`always_retry`, no matter what exception has happened.
+
+    :param before_delay_handler: Optional callable. Back off algorithm will
+        call this handler before delaying, when a retry operation is running,
+        just after the ``exception_handler`` signaled to retry upon a given
+        exception. Any return value will be ignored.
+
+    :param after_delay_handler: Optional callable. Back off algorithm will call
+        this handler just after delaying, when a retry operation is running,
+        just after the delaying between retries. Any return value will be
+        ignored.
 
     :type exceptions: tuple[Exception]
 
@@ -77,21 +104,31 @@ def backoff(
             while m_max_tries > 0:
                 try:
                     retval = f(*args, **kwargs)
-                except exceptions:
-                    logger.exception(
-                            (
-                                'backoff retry for: %r (max_tries=%r, '
-                                'delay=%r, factor=%r, exceptions=%r)'
-                            ),
-                            f, max_tries, delay, factor, exceptions
-                        )
+                except Exception as ex:
                     m_max_tries -= 1  # consume an attempt
-                    if m_max_tries <= 0:
-                        raise  # run out of tries
-                    time.sleep(m_delay)  # wait...
-                    m_delay *= factor  # make future wait longer
+                    if m_max_tries < 0:
+                        # run out of tries
+                        raise
+                    if exception_handler(ex):
+                        logger.info(
+                                (
+                                    'backoff retry for: %r (max_tries=%r, '
+                                    'delay=%r, factor=%r)'
+                                ),
+                                f,
+                                max_tries,
+                                delay,
+                                factor
+                            )
+                        before_delay_handler(ex)
+                        time.sleep(m_delay)  # wait...
+                        after_delay_handler(ex)
+                        m_delay *= factor  # make future wait longer
+                    else:
+                        # exception handler gave up
+                        raise
                 else:
-                    # we're done without errors
+                    # done without errors
                     return retval
         return inner
     return outter
