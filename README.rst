@@ -54,6 +54,9 @@ Current implementations was tested against following hardware:
 | `Bematech S/A`_         | MP-4200 TH        | 1.3, 1.6          |                                         |
 |                         |                   |                   |                                         |
 +-------------------------+-------------------+-------------------+-----------------------------------------+
+| `Control iD`_           | Print iD Touch    | 1.3.0             |                                         |
+|                         |                   |                   |                                         |
++-------------------------+-------------------+-------------------+-----------------------------------------+
 | `Epson`_                | TM-T20            | 1.14              |                                         |
 |                         |                   |                   |                                         |
 +-------------------------+-------------------+-------------------+-----------------------------------------+
@@ -106,6 +109,7 @@ Which produces an output similar to::
     Generic ESC/POS.......... escpos.impl.epson.GenericESCPOS
     Generic Elgin............ escpos.impl.elgin.ElginGeneric
     Nitere NPDV-1020......... escpos.impl.nitere.NitereNPDV1020
+    Print iD Touch........... escpos.impl.controlid.PrintIdTouch
 
 
 Usage Examples
@@ -360,5 +364,6 @@ Please, read this **disclaimer**.
 .. _`Elgin`: http://www.elgin.com.br/
 .. _`Nitere`: http://www.nitere.com.br/
 .. _`Bematech S/A`: http://www.bematechus.com/
+.. _`Control iD`: https://www.controlid.com.br/
 .. _`Urmet Daruma`: http://daruma.com.br/
 .. _`exponential backoff`: https://en.wikipedia.org/wiki/Exponential_backoff

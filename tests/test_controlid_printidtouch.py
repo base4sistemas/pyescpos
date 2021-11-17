@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/impl/__init__.py
+# escpos/tests/test_controlid_printidtouch.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #
@@ -20,26 +20,15 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import six
+import pytest
 
-from . import bematech  # noqa: F401
-from . import controlid  # noqa: F401
-from . import daruma  # noqa: F401
-from . import elgin  # noqa: F401
-from . import epson  # noqa: F401
-from . import nitere  # noqa: F401
-from . import unknown  # noqa: F401
+from escpos.impl.controlid import PrintIdTouch
 
 
-__all__ = [
-        'bematech',
-        'controlid',
-        'daruma',
-        'elgin',
-        'epson',
-        'nitere',
-        'unknown',
-    ]
+@pytest.fixture(scope='module')
+def printer():
+    return PrintIdTouch(pytest.FakeDevice())
 
-if six.PY2:
-    __all__ = [name.encode('latin-1') for name in __all__]
+
+def test_has_model_attr(printer):
+    assert hasattr(printer, 'model')

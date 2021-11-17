@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/impl/__init__.py
+# escpos/impl/controlid.py
 #
-# Copyright 2015 Base4 Sistemas Ltda ME
+# Copyright 2021 Base4 Sistemas
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,26 +20,20 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import six
-
-from . import bematech  # noqa: F401
-from . import controlid  # noqa: F401
-from . import daruma  # noqa: F401
-from . import elgin  # noqa: F401
-from . import epson  # noqa: F401
-from . import nitere  # noqa: F401
-from . import unknown  # noqa: F401
+from .. import feature
+from ..helpers import _Model
+from .epson import TMT20
 
 
-__all__ = [
-        'bematech',
-        'controlid',
-        'daruma',
-        'elgin',
-        'epson',
-        'nitere',
-        'unknown',
-    ]
+VENDOR = 'Control iD'
 
-if six.PY2:
-    __all__ = [name.encode('latin-1') for name in __all__]
+
+class PrintIdTouch(TMT20):
+    """Implementation for Control iD Print iD Touch thermal mini-printer."""
+
+    model = _Model(name='Print iD Touch', vendor=VENDOR)
+
+    def __init__(self, device, features={}, **kwargs):
+        super(PrintIdTouch, self).__init__(device, **kwargs)
+        self.hardware_features.update({feature.CUTTER: True})
+        self.hardware_features.update(features)
