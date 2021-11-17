@@ -25,7 +25,7 @@ PyESCPOS
 -------
 
 A Python support for Epson |copy| ESC/POS |reg| compatible printers. Read more
-at `Epson ESCPOS FAQ`_ (PDF document).
+at `Epson ESCPOS`_ Command Reference.
 
 The ESC/POS |reg| is a standard that every manufacturer work on and modify to
 suit their needs. That way, a sequence of commands in one printer does not
@@ -354,7 +354,7 @@ Please, read this **disclaimer**.
     :ltrim:
 
 .. _`PyESCPOS wiki`: https://github.com/base4sistemas/pyescpos/wiki
-.. _`Epson ESCPOS FAQ`: http://content.epson.de/fileadmin/content/files/RSD/downloads/escpos.pdf
+.. _`Epson ESCPOS`: https://reference.epson-biz.com/modules/ref_escpos/index.php?content_id=2
 .. _`python-escpos`: https://github.com/manpaz/python-escpos
 .. _`python-decouple`: https://github.com/henriquebastos/python-decouple
 .. _`PySerial`: https://pyserial.readthedocs.io/en/latest/
