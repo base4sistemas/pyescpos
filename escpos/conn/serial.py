@@ -450,8 +450,8 @@ class SerialConnection(object):
         return self._read_timeout
 
     @property
-    def write_time(self):
-        return self._write_time
+    def write_timeout(self):
+        return self._write_timeout
 
     @property
     def protocol_timeout(self):
