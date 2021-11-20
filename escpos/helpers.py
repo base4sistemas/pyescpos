@@ -69,8 +69,12 @@ def find_implementations(sort_by=None):
 class TimeoutHelper(object):
 
     def __init__(self, timeout=1):
-        self.timeout = 1
+        self._timeout = timeout
         self.set()
+
+    @property
+    def timeout(self):
+        return self._timeout
 
     def set(self):
         self._mark = time.time()
