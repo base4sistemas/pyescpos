@@ -23,7 +23,7 @@ from __future__ import unicode_literals
 import logging
 
 
-__version__ = '0.3'
+__version__ = '0.4'
 
 logging.getLogger('escpos').addHandler(logging.NullHandler())
 
