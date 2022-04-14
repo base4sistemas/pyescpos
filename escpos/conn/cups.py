@@ -74,9 +74,10 @@ class CupsConnection(FileConnection):
         super(CupsConnection, self).close()
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('sends to printer %s with cups %s:\n%s', self.printer_name, self.cups_ip, hexdump(data))
-        subprocess.Popen(
+        print_process = subprocess.Popen(
             ['lp', '-h', self.cups_ip, '-d', self.printer_name, self.devfile],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
+        print_process.wait(timeout=3000)
         self.temp_file.close()
