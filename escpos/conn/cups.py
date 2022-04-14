@@ -30,6 +30,8 @@ from future.utils import python_2_unicode_compatible
 
 from ..helpers import hexdump
 
+from tempfile import NamedTemporaryFile
+
 
 logger = logging.getLogger('escpos.conn.file')
 
@@ -46,7 +48,8 @@ class CupsConnection(FileConnection):
         return cls(cups_ip, printer_name, **kwargs)
 
     def __init__(self, cups_ip, printer_name, **kwargs):
-        super(CupsConnection, self).__init__(**kwargs)
+        self.temp_file = NamedTemporaryFile()
+        super(CupsConnection, self).__init__(devfile=self.temp_file.name, **kwargs)
         self.cups_ip = cups_ip
         self.printer_name = printer_name
 
@@ -66,11 +69,14 @@ class CupsConnection(FileConnection):
         if self.auto_flush:
             self.flush()
 
-
     def close(self):
         """Close system file."""
         super(CupsConnection, self).close()
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('sends to printer %s with cups %s:\n%s', self.printer_name, self.cups_ip, hexdump(data))
-
-        subprocess.Popen(['lp', '-h', self.cups_ip, '-d', self.printer_name, self.devfile], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess.Popen(
+            ['lp', '-h', self.cups_ip, '-d', self.printer_name, self.devfile],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
+        )
+        self.temp_file.close()
