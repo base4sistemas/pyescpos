@@ -30,6 +30,7 @@ from .file import FileConnection
 from .network import NetworkConnection
 from .serial import SerialConnection
 from .usb import USBConnection
+from .cups import CupsConnection
 
 
 __all__ = [
@@ -39,6 +40,7 @@ __all__ = [
         'NetworkConnection',
         'SerialConnection',
         'USBConnection',
+        'CupsConnection',
     ]
 
 if six.PY2:
@@ -51,6 +53,7 @@ FILE = 'file'
 NETWORK = 'network'
 SERIAL = 'serial'
 USB = 'usb'
+CUPS = 'cups'
 
 
 ConnectionTypeInfo = namedtuple('ConnectionTypeInfo', [
@@ -89,5 +92,10 @@ CONNECTION_TYPES = (
                 name='USB',
                 fqname='escpos.conn.usb.USBConnection',
                 type=USBConnection)),
+
+        (CUPS, ConnectionTypeInfo(
+                name='Cups',
+                fqname='escpos.conn.file.CupsConnection',
+                type=CupsConnection)),
     )
 """Known implementations for connection with printers."""
