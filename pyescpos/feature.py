@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/feature.py
+# pyescpos/feature.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #

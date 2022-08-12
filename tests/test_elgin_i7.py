@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/tests/test_elgin_i7.py
+# pyescpos/tests/test_elgin_i7.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #
@@ -22,7 +22,7 @@ from __future__ import unicode_literals
 
 import pytest
 
-from escpos.impl.elgin import ElginI7
+from pyescpos.impl.elgin import ElginI7
 
 
 @pytest.fixture(scope='module')

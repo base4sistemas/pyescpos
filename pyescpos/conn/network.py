@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/conn/network.py
+# pyescpos/conn/network.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #
@@ -75,7 +75,7 @@ def _network_exception_handler_for_write(ex):
         return isinstance(ex, _RETRY_EXCEPTIONS)
 
 
-logger = logging.getLogger('escpos.conn.network')
+logger = logging.getLogger('pyescpos.conn.network')
 
 
 @python_2_unicode_compatible

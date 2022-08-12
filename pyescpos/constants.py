@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/impl/controlid.py
+# pyescpos/constants.py
 #
-# Copyright 2021 Base4 Sistemas
+# Copyright 2015 Base4 Sistemas Ltda ME
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,20 +20,22 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
-from .. import feature
-from ..helpers import _Model
-from .epson import TMT20
+DEFAULT_ENCODING = 'utf-8'
 
+DEFAULT_ENCODING_ERRORS = 'strict'
 
-VENDOR = 'Control iD'
+CASHDRAWER_DEFAULT_DURATION = 200
+"""Duration for cash drawer activation (kick) in milliseconds.
+See :meth:`~pyescpos.impl.epson.GenericESCPOS.kick_drawer` method for details.
+"""
 
+BACKOFF_DEFAULT_MAXTRIES = 3
+"""Number of tries before give up. See :func:`pyescpos.retry.backoff`"""
 
-class PrintIdTouch(TMT20):
-    """Implementation for Control iD Print iD Touch thermal mini-printer."""
+BACKOFF_DEFAULT_DELAY = 3
+"""Delay between retries (in seconds). See :func:`pyescpos.retry.backoff`"""
 
-    model = _Model(name='Print iD Touch', vendor=VENDOR)
-
-    def __init__(self, device, features={}, **kwargs):
-        super(PrintIdTouch, self).__init__(device, **kwargs)
-        self.hardware_features.update({feature.CUTTER: True})
-        self.hardware_features.update(features)
+BACKOFF_DEFAULT_FACTOR = 2
+"""Multiply factor in which delay will be increased for the next retry.
+See :func:`pyescpos.retry.backoff`.
+"""

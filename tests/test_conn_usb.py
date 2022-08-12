@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/tests/test_conn_usb.py
+# pyescpos/tests/test_conn_usb.py
 #
 # Copyright 2020 Base4 Sistemas EIRELI
 #
@@ -21,7 +21,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 
-from escpos.conn.usb import USBConnection
+from pyescpos.conn.usb import USBConnection
 
 
 def test_has_settings_example_attribute():

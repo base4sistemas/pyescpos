@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/conn/file.py
+# pyescpos/conn/file.py
 #
 # Copyright 2017 KMEE INFORMATICA LTDA
 #
@@ -27,7 +27,7 @@ from future.utils import python_2_unicode_compatible
 from ..helpers import hexdump
 
 
-logger = logging.getLogger('escpos.conn.file')
+logger = logging.getLogger('pyescpos.conn.file')
 
 
 @python_2_unicode_compatible

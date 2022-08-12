@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/tests/test_epson_genericescpos.py
+# pyescpos/tests/test_epson_genericescpos.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #
@@ -22,8 +22,8 @@ from __future__ import unicode_literals
 
 import pytest
 
-from escpos.impl.epson import GenericESCPOS
-from escpos import feature
+from pyescpos.impl.epson import GenericESCPOS
+from pyescpos import feature
 
 
 @pytest.fixture(scope='module')

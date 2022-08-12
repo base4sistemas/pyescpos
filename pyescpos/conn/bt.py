@@ -42,7 +42,7 @@ from ..helpers import hexdump
 from ..retry import backoff
 
 
-logger = logging.getLogger('escpos.conn.bt')
+logger = logging.getLogger('pyescpos.conn.bt')
 
 
 class BluetoothConnectionError(Exception):
@@ -103,8 +103,8 @@ class BluetoothConnection(object):
 
         .. sourcecode:: python
 
-            from escpos import BluetoothConnection
-            from escpos.impl.epson import GenericESCPOS
+            from pyescpos import BluetoothConnection
+            from pyescpos.impl.epson import GenericESCPOS
 
             conn = BluetoothConnection.create('00:01:02:03:04:05')
             printer = GenericESCPOS(conn)

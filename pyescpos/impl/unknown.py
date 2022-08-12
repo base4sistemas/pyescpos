@@ -39,7 +39,7 @@ class CB55C(GenericESCPOS):
     .. note::
 
         When there is **NO** cash drawer connected, the command that follows
-        method :meth:`~escpos.impl.epson.GenericESCPOS.kick_drawer` will likely
+        method :meth:`~pyescpos.impl.epson.GenericESCPOS.kick_drawer` will likely
         fail.
 
     """

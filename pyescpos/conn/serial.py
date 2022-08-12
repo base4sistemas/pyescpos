@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/conn/serial.py
+# pyescpos/conn/serial.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #
@@ -54,7 +54,7 @@ FLOW_CONTROL_PROTOCOLS = (
     )
 
 
-logger = logging.getLogger('escpos.conn.serial')
+logger = logging.getLogger('pyescpos.conn.serial')
 
 
 def depends_on_pyserial_lib(func):

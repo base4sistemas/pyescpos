@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/usb.py
+# pyescpos/usb.py
 #
 # Copyright 2017 Base4 Sistemas Ltda ME
 #
@@ -40,7 +40,7 @@ except ImportError:
 PRINTER_CLASS = 0x07
 
 
-logger = logging.getLogger('escpos.conn.usb')
+logger = logging.getLogger('pyescpos.conn.usb')
 
 
 def depends_on_pyusb_lib(func):

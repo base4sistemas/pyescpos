@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/constants.py
+# pyescpos/impl/__init__.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #
@@ -20,22 +20,26 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
-DEFAULT_ENCODING = 'utf-8'
+import six
 
-DEFAULT_ENCODING_ERRORS = 'strict'
+from . import bematech  # noqa: F401
+from . import controlid  # noqa: F401
+from . import daruma  # noqa: F401
+from . import elgin  # noqa: F401
+from . import epson  # noqa: F401
+from . import nitere  # noqa: F401
+from . import unknown  # noqa: F401
 
-CASHDRAWER_DEFAULT_DURATION = 200
-"""Duration for cash drawer activation (kick) in milliseconds.
-See :meth:`~escpos.impl.epson.GenericESCPOS.kick_drawer` method for details.
-"""
 
-BACKOFF_DEFAULT_MAXTRIES = 3
-"""Number of tries before give up. See :func:`escpos.retry.backoff`"""
+__all__ = [
+        'bematech',
+        'controlid',
+        'daruma',
+        'elgin',
+        'epson',
+        'nitere',
+        'unknown',
+    ]
 
-BACKOFF_DEFAULT_DELAY = 3
-"""Delay between retries (in seconds). See :func:`escpos.retry.backoff`"""
-
-BACKOFF_DEFAULT_FACTOR = 2
-"""Multiply factor in which delay will be increased for the next retry.
-See :func:`escpos.retry.backoff`.
-"""
+if six.PY2:
+    __all__ = [name.encode('latin-1') for name in __all__]

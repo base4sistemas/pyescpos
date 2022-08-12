@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/__init__.py
+# pyescpos/__init__.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #
@@ -25,7 +25,7 @@ import logging
 
 __version__ = '0.4'
 
-logging.getLogger('escpos').addHandler(logging.NullHandler())
+logging.getLogger('pyescpos').addHandler(logging.NullHandler())
 
 
 from .conn import *  # noqa: E402,F401,F403

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/exceptions.py
+# escpos/impl/nitere.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #
@@ -20,18 +20,21 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
-
-class TimeoutException(Exception):
-    pass
-
-
-class CashDrawerException(Exception):
-    pass
+from ..helpers import _Model
+from .unknown import CB55C
 
 
-class NonWritableSocketError(Exception):
-    pass
+VENDOR = 'Nitere'
 
 
-class NonReadableSocketError(Exception):
-    pass
+class NitereNPDV1020(CB55C):
+    """Alias for **Unknown OEM** :class:`~pyescpos.impl.unknown.CB55C` model."""
+
+    model = _Model(name='Nitere NPDV-1020', vendor=VENDOR)
+
+    def __init__(self, device, features={}, **kwargs):
+        super(NitereNPDV1020, self).__init__(
+                device,
+                features=features,
+                **kwargs
+            )

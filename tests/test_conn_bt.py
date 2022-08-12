@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/tests/test_conn_bt.py
+# pyescpos/tests/test_conn_bt.py
 #
 # Copyright 2018 Base4 Sistemas Ltda ME
 #
@@ -28,9 +28,9 @@ try:
 except ImportError:
     _lib_bluetooth = False
 
-from escpos.conn.bt import find_rfcomm_port
-from escpos.conn.bt import BluetoothPortDiscoveryError
-from escpos.conn.bt import BluetoothConnection
+from pyescpos.conn.bt import find_rfcomm_port
+from pyescpos.conn.bt import BluetoothPortDiscoveryError
+from pyescpos.conn.bt import BluetoothConnection
 
 
 class FakeBluetoothSocket(object):

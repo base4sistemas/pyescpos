@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/tests/test_conn_dummy.py
+# pyescpos/tests/test_conn_dummy.py
 #
 # Copyright 2020 Base4 Sistemas EIRELI
 #
@@ -21,7 +21,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 
-from escpos.conn.dummy import DummyConnection
+from pyescpos.conn.dummy import DummyConnection
 
 
 def test_has_settings_example_attribute():

@@ -43,9 +43,9 @@ Implementation = namedtuple('Implementation', 'model type fqname')
 
 def find_implementations(sort_by=None):
     """
-    Returns a tuple of :class:`~escpos.helpers.Implementation` objects
+    Returns a tuple of :class:`~pyescpos.helpers.Implementation` objects
     containing metadata for all known implementations (subclasses of
-    :class:`~escpos.impl.epson.GenericESCPOS`) with vendor and model names, the
+    :class:`~pyescpos.impl.epson.GenericESCPOS`) with vendor and model names, the
     implementation type and its fully qualified name.
 
     This example will print all vendor and model names, sorted by vendor name:
@@ -184,7 +184,7 @@ def is_value_in(constants_group, value):
 
 
 def _list_impls():
-    from escpos.impl.epson import GenericESCPOS
+    from pyescpos.impl.epson import GenericESCPOS
     return _impls_for(GenericESCPOS)
 
 

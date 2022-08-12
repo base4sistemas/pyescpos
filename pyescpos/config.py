@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/config.py
+# pyescpos/config.py
 #
 # Copyright 2018 Base4 Sistemas Ltda ME
 #

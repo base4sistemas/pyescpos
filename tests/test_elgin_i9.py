@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/tests/test_elgin_i9.py
+# pyescpos/tests/test_elgin_i9.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #
@@ -22,8 +22,8 @@ from __future__ import unicode_literals
 
 import pytest
 
-from escpos.exceptions import CashDrawerException
-from escpos.impl.elgin import ElginI9
+from pyescpos.exceptions import CashDrawerException
+from pyescpos.impl.elgin import ElginI9
 
 
 @pytest.fixture(scope='module')
