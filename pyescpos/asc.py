@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/asc.py
+# pyescpos/asc.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #

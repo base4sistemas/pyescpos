@@ -32,7 +32,7 @@ def read(*filenames, **kwargs):
 
 
 def read_version():
-    content = read(os.path.join('escpos', '__init__.py'))
+    content = read(os.path.join('pyescpos', '__init__.py'))
     return re.search(r"__version__ = '([^']+)'", content).group(1)
 
 
@@ -62,9 +62,9 @@ setup(
         long_description=long_description,
         long_description_content_type='text/x-rst',
         packages=[
-                'escpos',
-                'escpos.impl',
-                'escpos.conn',
+                'pyescpos',
+                'pyescpos.impl',
+                'pyescpos.conn',
             ],
         install_requires=install_requires,
         extras_require=extras_require,

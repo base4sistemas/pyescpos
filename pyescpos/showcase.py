@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/showcase.py
+# pyescpos/showcase.py
 #
 # Copyright 2020 Base4 Sistemas Ltda ME
 #

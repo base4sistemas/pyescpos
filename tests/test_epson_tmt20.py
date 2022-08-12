@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/tests/test_epson_tmt20.py
+# pyescpos/tests/test_epson_tmt20.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #
@@ -22,7 +22,7 @@ from __future__ import unicode_literals
 
 import pytest
 
-from escpos.impl.epson import TMT20
+from pyescpos.impl.epson import TMT20
 
 
 @pytest.fixture(scope='module')

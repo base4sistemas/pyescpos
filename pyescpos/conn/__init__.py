@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/conn/__init__.py
+# pyescpos/conn/__init__.py
 #
 # Copyright 2018 Base4 Sistemas Ltda ME
 #
@@ -62,32 +62,32 @@ ConnectionTypeInfo = namedtuple('ConnectionTypeInfo', [
 CONNECTION_TYPES = (
         (BLUETOOTH, ConnectionTypeInfo(
                 name='Bluetooth',
-                fqname='escpos.conn.bt.BluetoothConnection',
+                fqname='pyescpos.conn.bt.BluetoothConnection',
                 type=BluetoothConnection)),
 
         (DUMMY, ConnectionTypeInfo(
                 name='Dummy',
-                fqname='escpos.conn.dummy.DummyConnection',
+                fqname='pyescpos.conn.dummy.DummyConnection',
                 type=DummyConnection)),
 
         (FILE, ConnectionTypeInfo(
                 name='File',
-                fqname='escpos.conn.file.FileConnection',
+                fqname='pyescpos.conn.file.FileConnection',
                 type=FileConnection)),
 
         (NETWORK, ConnectionTypeInfo(
                 name='Network',
-                fqname='escpos.conn.network.NetworkConnection',
+                fqname='pyescpos.conn.network.NetworkConnection',
                 type=NetworkConnection)),
 
         (SERIAL, ConnectionTypeInfo(
                 name='Serial (RS-232)',
-                fqname='escpos.conn.serial.SerialConnection',
+                fqname='pyescpos.conn.serial.SerialConnection',
                 type=SerialConnection)),
 
         (USB, ConnectionTypeInfo(
                 name='USB',
-                fqname='escpos.conn.usb.USBConnection',
+                fqname='pyescpos.conn.usb.USBConnection',
                 type=USBConnection)),
     )
 """Known implementations for connection with printers."""

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/tests/test_nitere_npdv1020.py
+# pyescpos/tests/test_nitere_npdv1020.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #
@@ -22,7 +22,7 @@ from __future__ import unicode_literals
 
 import pytest
 
-from escpos.impl.nitere import NitereNPDV1020
+from pyescpos.impl.nitere import NitereNPDV1020
 
 
 @pytest.fixture(scope='module')

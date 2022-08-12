@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/impl/bematech.py
+# pyescpos/impl/bematech.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #

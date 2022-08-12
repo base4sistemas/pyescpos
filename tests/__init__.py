@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/tests/__init__.py
+# pyescpos/tests/__init__.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/conn/dummy.py
+# pyescpos/conn/dummy.py
 #
 # Copyright 2017 KMEE INFORMATICA LTDA
 #
@@ -25,7 +25,7 @@ import logging
 from ..helpers import hexdump
 
 
-logger = logging.getLogger('escpos.conn.dummy')
+logger = logging.getLogger('pyescpos.conn.dummy')
 
 
 class DummyConnection(object):

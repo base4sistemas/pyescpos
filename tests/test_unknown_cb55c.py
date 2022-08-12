@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/tests/test_unknown_cb55c.py
+# pyescpos/tests/test_unknown_cb55c.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #
@@ -22,7 +22,7 @@ from __future__ import unicode_literals
 
 import pytest
 
-from escpos.impl.unknown import CB55C
+from pyescpos.impl.unknown import CB55C
 
 
 @pytest.fixture(scope='module')
