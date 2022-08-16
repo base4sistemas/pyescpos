@@ -30,6 +30,7 @@ from .file import FileConnection
 from .network import NetworkConnection
 from .serial import SerialConnection
 from .usb import USBConnection
+from .win32 import Win32Raw
 
 
 __all__ = [
@@ -39,6 +40,7 @@ __all__ = [
         'NetworkConnection',
         'SerialConnection',
         'USBConnection',
+        'Win32Raw',
     ]
 
 if six.PY2:
@@ -51,6 +53,7 @@ FILE = 'file'
 NETWORK = 'network'
 SERIAL = 'serial'
 USB = 'usb'
+WIN32 = 'win32'
 
 
 ConnectionTypeInfo = namedtuple('ConnectionTypeInfo', [
@@ -89,5 +92,11 @@ CONNECTION_TYPES = (
                 name='USB',
                 fqname='pyescpos.conn.usb.USBConnection',
                 type=USBConnection)),
+
+        (WIN32, ConnectionTypeInfo(
+                name='WIN32',
+                fqname='pyescpos.conn.win32.Win32Raw',
+                type=Win32Raw)),
+
     )
 """Known implementations for connection with printers."""
