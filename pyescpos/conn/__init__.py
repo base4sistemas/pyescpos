@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/conn/__init__.py
+# pyescpos/conn/__init__.py
 #
 # Copyright 2018 Base4 Sistemas Ltda ME
 #
@@ -30,6 +30,7 @@ from .file import FileConnection
 from .network import NetworkConnection
 from .serial import SerialConnection
 from .usb import USBConnection
+from .win32 import Win32Raw
 
 
 __all__ = [
@@ -39,6 +40,7 @@ __all__ = [
         'NetworkConnection',
         'SerialConnection',
         'USBConnection',
+        'Win32Raw',
     ]
 
 if six.PY2:
@@ -51,6 +53,7 @@ FILE = 'file'
 NETWORK = 'network'
 SERIAL = 'serial'
 USB = 'usb'
+WIN32 = 'win32'
 
 
 ConnectionTypeInfo = namedtuple('ConnectionTypeInfo', [
@@ -62,32 +65,38 @@ ConnectionTypeInfo = namedtuple('ConnectionTypeInfo', [
 CONNECTION_TYPES = (
         (BLUETOOTH, ConnectionTypeInfo(
                 name='Bluetooth',
-                fqname='escpos.conn.bt.BluetoothConnection',
+                fqname='pyescpos.conn.bt.BluetoothConnection',
                 type=BluetoothConnection)),
 
         (DUMMY, ConnectionTypeInfo(
                 name='Dummy',
-                fqname='escpos.conn.dummy.DummyConnection',
+                fqname='pyescpos.conn.dummy.DummyConnection',
                 type=DummyConnection)),
 
         (FILE, ConnectionTypeInfo(
                 name='File',
-                fqname='escpos.conn.file.FileConnection',
+                fqname='pyescpos.conn.file.FileConnection',
                 type=FileConnection)),
 
         (NETWORK, ConnectionTypeInfo(
                 name='Network',
-                fqname='escpos.conn.network.NetworkConnection',
+                fqname='pyescpos.conn.network.NetworkConnection',
                 type=NetworkConnection)),
 
         (SERIAL, ConnectionTypeInfo(
                 name='Serial (RS-232)',
-                fqname='escpos.conn.serial.SerialConnection',
+                fqname='pyescpos.conn.serial.SerialConnection',
                 type=SerialConnection)),
 
         (USB, ConnectionTypeInfo(
                 name='USB',
-                fqname='escpos.conn.usb.USBConnection',
+                fqname='pyescpos.conn.usb.USBConnection',
                 type=USBConnection)),
+
+        (WIN32, ConnectionTypeInfo(
+                name='WIN32',
+                fqname='pyescpos.conn.win32.Win32Raw',
+                type=Win32Raw)),
+
     )
 """Known implementations for connection with printers."""

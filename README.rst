@@ -85,7 +85,7 @@ You can get a list of all available implementations with the following snippet:
 
 .. sourcecode:: python
 
-    from escpos import helpers
+    from pyescpos import helpers
 
     for impl in helpers.find_implementations(sort_by='model.name'):
         print('{:.<25} {}'.format(impl.model.name, impl.fqname))
@@ -118,8 +118,8 @@ You can connect to your printer through network TCP/IP interface:
 
 .. sourcecode:: python
 
-    from escpos import NetworkConnection
-    from escpos.impl.epson import GenericESCPOS
+    from pyescpos import NetworkConnection
+    from pyescpos.impl.epson import GenericESCPOS
 
     conn = NetworkConnection.create('10.0.0.101:9100')
     printer = GenericESCPOS(conn)
@@ -138,8 +138,8 @@ Here is how you can make a Serial connection:
 
 .. sourcecode:: python
 
-    from escpos import SerialConnection
-    from escpos.impl.epson import GenericESCPOS
+    from pyescpos import SerialConnection
+    from pyescpos.impl.epson import GenericESCPOS
 
     # connect to port 'ttyS5' @ 9600 Bps, assuming RTS/CTS for handshaking
     conn = SerialConnection.create('/dev/ttyS5:9600,8,1,N')
@@ -159,8 +159,8 @@ Here is how you can make a Bluetooth connection:
 
 .. sourcecode:: python
 
-    from escpos import BluetoothConnection
-    from escpos.impl.epson import GenericESCPOS
+    from pyescpos import BluetoothConnection
+    from pyescpos.impl.epson import GenericESCPOS
 
     # uses SPD (service port discovery) services to find which port to connect to
     conn = BluetoothConnection.create('00:01:02:03:04:05')
@@ -185,8 +185,8 @@ Here is how you can make an USB connection:
 
 .. sourcecode:: python
 
-    from escpos.ifusb import USBConnection
-    from escpos.impl.elgin import ElginRM22
+    from pyescpos.ifusb import USBConnection
+    from pyescpos.impl.elgin import ElginRM22
 
     conn = USBConnection.create('20d1:7008,interface=0,ep_out=3,ep_in=0')
     printer = ElginRM22(conn)
@@ -205,8 +205,8 @@ extremely unreliable and produce many arbitrary errors.
 
 .. sourcecode:: python
 
-    from escpos import FileConnection
-    from escpos.impl.elgin import ElginI9
+    from pyescpos import FileConnection
+    from pyescpos.impl.elgin import ElginI9
 
     conn = FileConnection('/dev/usb/lp1')
     printer = ElginI9(conn)
@@ -223,8 +223,8 @@ of the “output” as raw ESC/POS in a string and returns that.
 
 .. sourcecode:: python
 
-    from escpos import DummyConnection
-    from escpos.impl.epson import GenericESCPOS
+    from pyescpos import DummyConnection
+    from pyescpos.impl.epson import GenericESCPOS
 
     conn = DummyConnection()
     printer = GenericESCPOS(conn)
@@ -242,9 +242,9 @@ barcode as you asked.
 
 .. sourcecode:: python
 
-    from escpos import barcode
-    from escpos import SerialConnection
-    from escpos.impl.epson import GenericESCPOS
+    from pyescpos import barcode
+    from pyescpos import SerialConnection
+    from pyescpos.impl.epson import GenericESCPOS
 
     conn = SerialConnection.create('COM1:9600,8,1,N')
     printer = GenericESCPOS(conn)

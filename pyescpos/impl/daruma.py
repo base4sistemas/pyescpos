@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/impl/daruma.py
+# pyescpos/impl/daruma.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #

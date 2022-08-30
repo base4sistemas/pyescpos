@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/exceptions.py
+# pyescpos/__init__.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #
@@ -20,18 +20,12 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
-
-class TimeoutException(Exception):
-    pass
+import logging
 
 
-class CashDrawerException(Exception):
-    pass
+__version__ = '0.5'
+
+logging.getLogger('pyescpos').addHandler(logging.NullHandler())
 
 
-class NonWritableSocketError(Exception):
-    pass
-
-
-class NonReadableSocketError(Exception):
-    pass
+from .conn import *  # noqa: E402,F401,F403

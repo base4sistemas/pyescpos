@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/constants.py
+# escpos/impl/nitere.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #
@@ -20,22 +20,21 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
-DEFAULT_ENCODING = 'utf-8'
+from ..helpers import _Model
+from .unknown import CB55C
 
-DEFAULT_ENCODING_ERRORS = 'strict'
 
-CASHDRAWER_DEFAULT_DURATION = 200
-"""Duration for cash drawer activation (kick) in milliseconds.
-See :meth:`~escpos.impl.epson.GenericESCPOS.kick_drawer` method for details.
-"""
+VENDOR = 'Nitere'
 
-BACKOFF_DEFAULT_MAXTRIES = 3
-"""Number of tries before give up. See :func:`escpos.retry.backoff`"""
 
-BACKOFF_DEFAULT_DELAY = 3
-"""Delay between retries (in seconds). See :func:`escpos.retry.backoff`"""
+class NitereNPDV1020(CB55C):
+    """Alias for **Unknown OEM** :class:`~pyescpos.impl.unknown.CB55C` model."""
 
-BACKOFF_DEFAULT_FACTOR = 2
-"""Multiply factor in which delay will be increased for the next retry.
-See :func:`escpos.retry.backoff`.
-"""
+    model = _Model(name='Nitere NPDV-1020', vendor=VENDOR)
+
+    def __init__(self, device, features={}, **kwargs):
+        super(NitereNPDV1020, self).__init__(
+                device,
+                features=features,
+                **kwargs
+            )

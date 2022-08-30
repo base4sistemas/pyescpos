@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/tests/test_helpers.py
+# pyescpos/tests/test_helpers.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #
@@ -23,10 +23,10 @@ from __future__ import unicode_literals
 import time
 import pytest
 
-from escpos.exceptions import TimeoutException
-from escpos.helpers import chunks
-from escpos.helpers import TimeoutHelper
-from escpos.helpers import find_implementations
+from pyescpos.exceptions import TimeoutException
+from pyescpos.helpers import chunks
+from pyescpos.helpers import TimeoutHelper
+from pyescpos.helpers import find_implementations
 
 
 def test_chunk():
@@ -52,7 +52,7 @@ def test_find_implementations():
     assert isinstance(impls, tuple)
     assert len(impls) >= 1
 
-    expected_fqname = 'escpos.impl.epson.GenericESCPOS'
+    expected_fqname = 'pyescpos.impl.epson.GenericESCPOS'
 
     for impl in impls:
         if impl.fqname == expected_fqname:

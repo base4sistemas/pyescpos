@@ -26,7 +26,7 @@ import time
 from . import constants
 
 
-logger = logging.getLogger('escpos.retry')
+logger = logging.getLogger('pyescpos.retry')
 
 
 def always_retry(e):
@@ -55,14 +55,14 @@ def backoff(
     the *Python Decorator Library*.
 
     :param int max_tries: Number of tries before give up. Defaults to
-        :const:`~escpos.constants.BACKOFF_DEFAULT_MAXTRIES`.
+        :const:`~pyescpos.constants.BACKOFF_DEFAULT_MAXTRIES`.
 
     :param int delay: Delay between retries (in seconds). Defaults to
-        :const:`~escpos.constants.BACKOFF_DEFAULT_DELAY`.
+        :const:`~pyescpos.constants.BACKOFF_DEFAULT_DELAY`.
 
     :param int factor: Multiply factor in which delay will be increased for
         the next retry. Defaults to
-        :const:`~escpos.constants.BACKOFF_DEFAULT_FACTOR`.
+        :const:`~pyescpos.constants.BACKOFF_DEFAULT_FACTOR`.
 
     :param exception_handler: Optional callable. Back off algorithm will call
         this handler upon any exception that happens in the decorated function.

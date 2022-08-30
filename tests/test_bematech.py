@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/tests/test_bematech.py
+# pyescpos/tests/test_bematech.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #
@@ -24,11 +24,11 @@ import pytest
 
 import six
 
-from escpos import feature
-from escpos.barcode import BARCODE_NORMAL_WIDTH
-from escpos.barcode import BARCODE_HRI_BOTTOM
-from escpos.exceptions import CashDrawerException
-from escpos.impl.bematech import MP4200TH
+from pyescpos import feature
+from pyescpos.barcode import BARCODE_NORMAL_WIDTH
+from pyescpos.barcode import BARCODE_HRI_BOTTOM
+from pyescpos.exceptions import CashDrawerException
+from pyescpos.impl.bematech import MP4200TH
 
 # TODO: Implement tests for inherited methods so we can detect when changes
 #       in the base implementation are potentially breaking the specific

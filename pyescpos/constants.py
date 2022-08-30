@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/__init__.py
+# pyescpos/constants.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #
@@ -20,12 +20,22 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import logging
+DEFAULT_ENCODING = 'utf-8'
 
+DEFAULT_ENCODING_ERRORS = 'strict'
 
-__version__ = '0.4'
+CASHDRAWER_DEFAULT_DURATION = 200
+"""Duration for cash drawer activation (kick) in milliseconds.
+See :meth:`~pyescpos.impl.epson.GenericESCPOS.kick_drawer` method for details.
+"""
 
-logging.getLogger('escpos').addHandler(logging.NullHandler())
+BACKOFF_DEFAULT_MAXTRIES = 3
+"""Number of tries before give up. See :func:`pyescpos.retry.backoff`"""
 
+BACKOFF_DEFAULT_DELAY = 3
+"""Delay between retries (in seconds). See :func:`pyescpos.retry.backoff`"""
 
-from .conn import *  # noqa: E402,F401,F403
+BACKOFF_DEFAULT_FACTOR = 2
+"""Multiply factor in which delay will be increased for the next retry.
+See :func:`pyescpos.retry.backoff`.
+"""

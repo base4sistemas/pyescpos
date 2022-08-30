@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/tests/test_daruma_genericdaruma.py
+# pyescpos/tests/test_daruma_genericdaruma.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #
@@ -22,7 +22,7 @@ from __future__ import unicode_literals
 
 import pytest
 
-from escpos.impl.daruma import DarumaGeneric
+from pyescpos.impl.daruma import DarumaGeneric
 
 
 @pytest.fixture(scope='module')

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/barcode.py
+# pyescpos/barcode.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #

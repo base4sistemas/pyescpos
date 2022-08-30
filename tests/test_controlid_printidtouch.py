@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/tests/test_controlid_printidtouch.py
+# pyescpos/tests/test_controlid_printidtouch.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #
@@ -22,7 +22,7 @@ from __future__ import unicode_literals
 
 import pytest
 
-from escpos.impl.controlid import PrintIdTouch
+from pyescpos.impl.controlid import PrintIdTouch
 
 
 @pytest.fixture(scope='module')

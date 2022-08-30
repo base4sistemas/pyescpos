@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/impl/epson.py
+# pyescpos/impl/epson.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #
@@ -422,7 +422,7 @@ class GenericESCPOS(object):
 
         :param str data: The Code 128 data to be rendered.
         :param bytes codeset: Optional. Keyword argument for the subtype (code
-            set) to render. Defaults to :attr:`escpos.barcode.CODE128_A`.
+            set) to render. Defaults to :attr:`pyescpos.barcode.CODE128_A`.
 
         .. warning::
 

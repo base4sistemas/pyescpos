@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/tests/test_elgin_elgingeneric.py
+# pyescpos/tests/test_elgin_elgingeneric.py
 #
 # Copyright 2015 Base4 Sistemas Ltda ME
 #
@@ -22,7 +22,7 @@ from __future__ import unicode_literals
 
 import pytest
 
-from escpos.impl.elgin import ElginGeneric
+from pyescpos.impl.elgin import ElginGeneric
 
 
 @pytest.fixture(scope='module')

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# escpos/tests/test_retry.py
+# pyescpos/tests/test_retry.py
 #
 # Copyright 2021 Base4 Sistemas EIRELI
 #
@@ -24,8 +24,8 @@ from six.moves import range
 
 import pytest
 
-from escpos.retry import time as time_module
-from escpos.retry import backoff
+from pyescpos.retry import time as time_module
+from pyescpos.retry import backoff
 
 
 def test_backoff_no_exceptions_raised():
