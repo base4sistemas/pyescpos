@@ -227,23 +227,6 @@ class MP4200TH(epson.GenericESCPOS):
         self._escpos = _ESCPOS(self)
         self._escbema = _ESCBematech(self)
 
-    def set_expanded(self, flag):
-        self._escbema.set_expanded(flag)
-
-    def set_condensed(self, flag):
-        self._escbema.set_condensed(flag)
-
-    def set_emphasized(self, flag):
-        self._escbema.set_emphasized(flag)
-
-    def cut(self, partial=True):
-        if self.hardware_features.get(feature.CUTTER, False):
-            param = b'\x6D' if partial else b'\x69'
-            self.device.write(b'\x1B' + param)
-
-    def _code128_impl(self, data, **kwargs):
-        return self._escbema.code128(data, **kwargs)
-
     def _qrcode_impl(self, data, **kwargs):
         return self._escbema.qrcode(data, **kwargs)
 
